@@ -1,0 +1,118 @@
+---
+title: Kamus Data dan Tipe Data
+description: Fondasi deklarasi dan pengelolaan data dalam pemrograman
+---
+
+Kamus Data adalah komponen fundamental dalam pemrograman yang digunakan untuk mendeklarasikan dan mendefinisikan nama-nama yang akan digunakan dalam program.  
+**Kamus Data** berisi deklarasi type, variabel, dan konstanta yang dibuat oleh programmer.  
+**Tipe Data** menentukan jenis nilai yang dapat disimpan dan operasi yang dapat dilakukan pada data tersebut.
+
+Pemahaman yang baik tentang kamus data dan tipe data adalah langkah pertama dalam menulis program yang efisien dan mudah dipahami.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep kamus data** sebagai tempat deklarasi nama-nama dalam program dan membedakannya dari instruksi program.
+- **Mengenal tipe data primitif** yang tersedia dalam bahasa pemrograman, termasuk karakteristik dan penggunaan masing-masing tipe.
+- **Memahami tipe data turunan** dan cara membentuk struktur data yang lebih kompleks dari tipe data dasar.
+- **Menerapkan deklarasi yang tepat** sesuai dengan kebutuhan program dan mengikuti konvensi penamaan yang baik.
+
+---
+
+## Mengapa Materi Ini Penting?
+
+1. **Dasar Pemrograman**  
+   Setiap program dimulai dengan deklarasi data. Tanpa pemahaman yang baik tentang kamus data dan tipe data, programmer akan kesulitan merancang struktur program yang efisien dan mudah dipelihara.
+
+2. **Efisiensi Memori**  
+   Pemilihan tipe data yang tepat menentukan penggunaan memori program. Menggunakan `int` untuk data yang sebenarnya cukup dengan `char` akan membuang-buang memori, terutama dalam aplikasi berskala besar.
+
+3. **Pencegahan Error**  
+   Deklarasi yang jelas dan konsisten membantu mencegah kesalahan logika dan memudahkan proses debugging. Kompiler dapat mendeteksi ketidakcocokan tipe data sejak awal.
+
+---
+
+## Konsep Kamus Data
+
+### Definisi
+Kamus data digunakan untuk mendeklarasikan nama-nama yang digunakan dalam program, meliputi:
+- **Type**: Definisi tipe data baru
+- **Variabel**: Tempat penyimpanan data yang nilainya dapat berubah
+- **Konstanta**: Nilai tetap yang tidak dapat diubah selama program berjalan
+
+### Format Deklarasi
+```cpp
+[tipe_data] [nama];
+```
+
+**Contoh:**
+```cpp
+int i;                // Variabel integer
+float jumlahUang;     // Variabel bilangan desimal
+```
+
+**Catatan Penting**: Deklarasi adalah definisi nama, bukan instruksi yang dieksekusi.
+
+---
+
+## Tipe Data
+
+### Tipe Data Primitif
+Tipe data dasar yang tersedia dalam C++:
+
+- **`bool`** - Boolean (true/false)
+- **`int`** - Integer (bilangan bulat)
+- **`float`** - Real (bilangan desimal)
+- **`char`** - Character (karakter tunggal)
+- **`string`** - String (rangkaian karakter)
+
+### Tipe Data Turunan
+Dibentuk dari kombinasi tipe data primitif untuk merepresentasikan entitas yang lebih kompleks.
+
+**Contoh Struktur DataMahasiswa:**
+```cpp
+struct DataMahasiswa {
+    string NIM;
+    string Nama;
+    int Umur;
+    string Kota;
+};
+```
+
+**Contoh Array:**
+```cpp
+int umur[10];  // Array 10 bilangan integer untuk data umur
+```
+
+---
+
+## Latihan
+
+### Latihan 1: Program Rerata
+**Objektif**: Membuat program yang menghitung rata-rata dari 20 bilangan integer.
+
+**Spesifikasi:**
+- **Input**: 20 bilangan integer dari keyboard
+- **Output**: Nilai rerata dari ke-20 bilangan tersebut
+
+### Latihan 2: Program 3 Terbesar
+**Objektif**: Membuat program yang menemukan 3 bilangan terbesar dari 20 input.
+
+**Spesifikasi:**
+- **Input**: 20 bilangan integer dari keyboard  
+- **Output**: 3 bilangan dengan nilai terbesar
+
+---
+
+## Catatan
+
+- Gunakan nama variabel yang deskriptif dan mengikuti konvensi penamaan (camelCase untuk C++).
+- Pilih tipe data yang sesuai dengan rentang nilai yang akan disimpan untuk mengoptimalkan penggunaan memori.
+- Deklarasikan variabel di tempat yang tepat — dekat dengan penggunaannya untuk meningkatkan keterbacaan kode.
+
+---
+
+*Materi - Pengantar Perkuliahan Algoritma dan Struktur Data*

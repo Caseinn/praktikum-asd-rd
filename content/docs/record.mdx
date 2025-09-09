@@ -1,0 +1,271 @@
+---
+title: Record (Struct)
+description: Memahami konsep record sebagai tipe data bentukan untuk menyimpan data dengan tipe yang berbeda-beda
+---
+
+Record adalah tipe data bentukan yang memungkinkan penyimpanan beberapa data dengan tipe yang berbeda dalam satu struktur.  
+**Record** (atau **struct** dalam C++) adalah kumpulan item data dengan tipe yang berbeda-beda yang dikelompokkan dalam satu nama.  
+**Field** adalah setiap elemen individual dalam record yang dapat memiliki tipe data yang berbeda dan dapat diakses secara terpisah.
+
+Jika array menyimpan data homogen (tipe sama), maka record menyimpan data heterogen (tipe berbeda) yang saling berkaitan.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep record** sebagai struktur data untuk menyimpan informasi yang kompleks dengan berbagai tipe data.
+- **Mendeklarasikan dan menggunakan struct** dengan sintaks yang benar dalam bahasa C++.
+- **Mengakses field dalam record** menggunakan operator dot (.) untuk manipulasi data individual.
+- **Menggabungkan array dan record** untuk membuat struktur data yang dapat menyimpan banyak entitas dengan atribut yang beragam.
+
+---
+
+## Mengapa Penting?
+
+1. **Representasi Data Real-World**  
+   Data di dunia nyata sering kali kompleks dan heterogen. Misalnya, data mahasiswa terdiri dari NIM (integer), nama (string), dan IPK (float). Record memungkinkan representasi yang natural untuk entitas seperti ini.
+
+2. **Organisasi Data yang Lebih Baik**  
+   Dibandingkan menggunakan variabel terpisah, record mengelompokkan data yang saling berkaitan dalam satu unit, membuat kode lebih terorganisir dan mudah dipahami.
+
+3. **Fondasi Pemrograman Berorientasi Objek**  
+   Record adalah pendahulu konsep class dalam OOP. Memahami struct membantu transisi ke pemrograman berorientasi objek.
+
+---
+
+## Masalah Tanpa Record
+
+Tanpa record, untuk menyimpan data mahasiswa:
+
+```cpp
+// Tanpa record - data terpisah dan tidak terorganisir
+int nim1 = 14151003, nim2 = 14151004;
+string nama1 = "Andi", nama2 = "Budi";
+float ipk1 = 3.25, ipk2 = 3.40;
+
+// Sulit mengelola hubungan antar data
+// Bagaimana jika ada 100 mahasiswa?
+```
+
+**Masalah:**
+- Data yang berkaitan terpisah-pisah
+- Sulit mengelola dalam jumlah besar
+- Tidak ada struktur yang jelas
+
+---
+
+## Konsep Record
+
+### Definisi dan Karakteristik
+
+Record memiliki karakteristik utama:
+- **Heterogen**: Field dapat memiliki tipe data yang berbeda
+- **Terstruktur**: Data terorganisir dengan nama field yang jelas  
+- **Aksesibel**: Setiap field dapat diakses dan dimodifikasi individual
+- **Reusable**: Dapat dijadikan tipe data baru untuk membuat variabel
+
+### Bentuk Umum Deklarasi
+```cpp
+// Deklarasi struct
+struct nama_record {
+    tipe_data field1;
+    tipe_data field2;
+    // ... field lainnya
+};
+
+// Penggunaan
+nama_record variabel_name;
+```
+
+---
+
+## Implementasi Record
+
+### Contoh Dasar: Data Mahasiswa
+```cpp
+#include <iostream>
+using namespace std;
+
+// Deklarasi struct
+struct mahasiswa {
+    int nim;
+    string nama;
+    float ipk;
+};
+
+int main() {
+    // Membuat variabel bertipe mahasiswa
+    mahasiswa mhs1;
+    
+    // Mengisi data
+    mhs1.nim = 14151003;
+    mhs1.nama = "Andi Sugandi";
+    mhs1.ipk = 3.25;
+    
+    // Menampilkan data
+    cout << "NIM  : " << mhs1.nim << endl;
+    cout << "Nama : " << mhs1.nama << endl;
+    cout << "IPK  : " << mhs1.ipk << endl;
+    
+    return 0;
+}
+```
+
+### Akses Field dengan Operator Dot (.)
+```cpp
+// Membaca nilai field
+cout << mhs1.nama;
+
+// Mengubah nilai field  
+mhs1.ipk = 3.50;
+
+// Operasi pada field
+if (mhs1.ipk >= 3.50) {
+    cout << "Prestasi Cumlaude";
+}
+```
+
+---
+
+## Array dari Record
+
+Kombinasi array dan record memberikan kekuatan untuk mengelola banyak entitas kompleks:
+
+### Konsep
+- **Array**: Menyimpan banyak data dengan tipe yang sama
+- **Record**: Menyimpan data dengan tipe yang berbeda
+- **Array dari Record**: Menyimpan banyak entitas yang masing-masing memiliki atribut beragam
+
+### Visualisasi: Data Buku
+```
+Array dari Record Buku:
+┌─────┬──────────────────┬─────────┬─────────────┬─────────┐
+│ ISBN│    Judul Buku    │Halaman  │  Penerbit   │  Kota   │
+├─────┼──────────────────┼─────────┼─────────────┼─────────┤
+│ 978 │   Basis Data     │   250   │ Informatika │ Bandung │  [0]
+│ 979 │ Sistem Operasi   │   400   │ Andi Offset │  Yogya  │  [1] 
+│ 980 │ Berlatih Fedora  │   125   │ Informatika │ Bandung │  [2]
+└─────┴──────────────────┴─────────┴─────────────┴─────────┘
+```
+
+### Implementasi
+```cpp
+struct buku {
+    int isbn;
+    string judul;
+    int halaman;
+    string penerbit;
+    string kota;
+};
+
+int main() {
+    buku perpustakaan[100];  // Array dari record
+    int jumlah_buku;
+    
+    cout << "Masukkan jumlah buku: ";
+    cin >> jumlah_buku;
+    
+    // Input data
+    for(int i = 0; i < jumlah_buku; i++) {
+        cout << "Data buku ke-" << (i+1) << endl;
+        cout << "ISBN: "; cin >> perpustakaan[i].isbn;
+        cout << "Judul: "; cin >> perpustakaan[i].judul;
+        cout << "Halaman: "; cin >> perpustakaan[i].halaman;
+        cout << "Penerbit: "; cin >> perpustakaan[i].penerbit;
+        cout << "Kota: "; cin >> perpustakaan[i].kota;
+    }
+    
+    // Menampilkan data
+    cout << "\nData Perpustakaan:" << endl;
+    for(int i = 0; i < jumlah_buku; i++) {
+        cout << perpustakaan[i].isbn << " | ";
+        cout << perpustakaan[i].judul << " | ";
+        cout << perpustakaan[i].halaman << " | ";
+        cout << perpustakaan[i].penerbit << " | ";
+        cout << perpustakaan[i].kota << endl;
+    }
+    
+    return 0;
+}
+```
+
+---
+
+## Operasi pada Array Record
+
+### Pencarian Berdasarkan Field
+```cpp
+// Mencari buku berdasarkan ISBN
+int cari_isbn;
+bool ditemukan = false;
+int index_ditemukan = -1;
+
+cout << "Masukkan ISBN yang dicari: ";
+cin >> cari_isbn;
+
+for(int i = 0; i < jumlah_buku; i++) {
+    if(perpustakaan[i].isbn == cari_isbn) {
+        ditemukan = true;
+        index_ditemukan = i;
+        break;
+    }
+}
+
+if(ditemukan) {
+    cout << "Buku ditemukan:" << endl;
+    cout << "Judul: " << perpustakaan[index_ditemukan].judul << endl;
+    cout << "Penerbit: " << perpustakaan[index_ditemukan].penerbit << endl;
+} else {
+    cout << "Buku tidak ditemukan!" << endl;
+}
+```
+
+### Sorting Berdasarkan Field
+```cpp
+// Mengurutkan buku berdasarkan jumlah halaman (ascending)
+for(int i = 0; i < jumlah_buku - 1; i++) {
+    for(int j = 0; j < jumlah_buku - i - 1; j++) {
+        if(perpustakaan[j].halaman > perpustakaan[j+1].halaman) {
+            // Tukar posisi
+            buku temp = perpustakaan[j];
+            perpustakaan[j] = perpustakaan[j+1];
+            perpustakaan[j+1] = temp;
+        }
+    }
+}
+```
+
+---
+
+## Latihan
+
+### Latihan 1: Sistem Perpustakaan Dasar
+**Objektif**: Membuat sistem penyimpanan data buku menggunakan array dari record.
+
+**Spesifikasi:**
+- **Struct**: ISBN, Judul, Halaman, Penerbit, Kota
+- **Input**: Data N buah buku dari user
+- **Output**: Tampilan data dalam format tabel
+
+### Latihan 2: Sistem Pencarian Buku
+**Objektif**: Menambahkan fitur pencarian pada sistem perpustakaan.
+
+**Spesifikasi:**
+- Pencarian buku berdasarkan ISBN
+- Menampilkan detail buku jika ditemukan
+- Pesan error jika tidak ditemukan
+
+---
+
+## Catatan
+
+- **Penamaan Field**: Gunakan nama yang deskriptif dan konsisten
+- **Operator Akses**: Gunakan titik (.) untuk mengakses field dalam record
+- **Memory Layout**: Field disimpan secara berurutan dalam memori
+- **Nested Struct**: Record dapat berisi record lain untuk struktur yang lebih kompleks
+
+---
+
+*Materi - Pengantar Perkuliahan Algoritma dan Struktur Data*
