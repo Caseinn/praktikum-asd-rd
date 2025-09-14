@@ -6,6 +6,43 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
+// Metadata untuk halaman (App Router)
+export const metadata = {
+  title: 'Praktikum ASD RD',
+  description: 'Dokumentasi praktikum ASD RD  untuk mahasiswa Teknik Informatika.',
+  keywords: ['ASD', 'RD', 'Praktikum', 'Teknik Informatika'],
+  authors: [{ name: 'Prodi Teknik Informatika' }],
+  openGraph: {
+    title: 'Praktikum ASD RD',
+    description: 'Dokumentasi praktikum ASD RD untuk mata kuliah Algoritma dan Struktur Data.',
+    url: 'https://praktikum-asd-rd.vercel.app', 
+    siteName: 'Praktikum ASD RD',
+    images: [
+      {
+        url: '/logo.png', // pastikan logo tersedia di public/
+        width: 1200,
+        height: 630,
+        alt: 'Logo Praktikum ASD RD',
+      },
+    ],
+    locale: 'id_ID',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Praktikum ASD RD',
+    description: 'Dokumentasi praktikum ASD RD untuk mata kuliah Algoritma dan Struktur Data.',
+    images: ['/logo.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: '/logo.png',
+  },
+};
+
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>

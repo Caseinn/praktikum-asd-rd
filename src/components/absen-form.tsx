@@ -8,6 +8,34 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// === helpers fingerprint & geolocation ===
+async function sha256Hex(s: string) {
+  const enc = new TextEncoder().encode(s)
+  const buf = await crypto.subtle.digest('SHA-256', enc)
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
+}
+
+async function getDeviceId() {
+  const fpRaw = [
+    navigator.userAgent,
+    navigator.platform,
+    screen?.width, screen?.height, screen?.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+  ].join('|')
+  return await sha256Hex(fpRaw)
+}
+
+async function getCoords(): Promise<{lat:number,lng:number}|null> {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => resolve(null),
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 }
+    )
+  })
+}
+
 export function AbsenForm({
   className,
   ...props
@@ -36,10 +64,14 @@ export function AbsenForm({
 
     setLoading(true)
     try {
+      // ambil deviceId & lokasi sebelum fetch
+      const deviceId = await getDeviceId()
+      const coords = await getCoords() // bisa null jika user menolak izin
+
       const r = await fetch("/api/absen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nim: nimClean }),
+        body: JSON.stringify({ nim: nimClean, deviceId, coords }),
       })
       const data = await r.json()
 
