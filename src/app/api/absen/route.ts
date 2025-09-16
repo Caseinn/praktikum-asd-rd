@@ -5,25 +5,34 @@ export const runtime = 'nodejs'
 const GAS_URL = process.env.GAS_URL || ''
 
 const hits = new Map<string, { count: number; ts: number }>()
-function rateLimit(ip: string, limit = 20, windowMs = 60_000) {
+function rateLimit(key: string, limit = 5, windowMs = 60_000) {
   const now = Date.now()
-  const rec = hits.get(ip) || { count: 0, ts: now }
+  const rec = hits.get(key) || { count: 0, ts: now }
   if (now - rec.ts > windowMs) { rec.count = 0; rec.ts = now }
-  rec.count++; hits.set(ip, rec)
+  rec.count++; hits.set(key, rec)
   return rec.count <= limit
 }
 
 export async function POST(req: Request) {
   try {
-    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0] || 'local'
-    if (!rateLimit(ip)) {
-      return NextResponse.json({ ok:false, msg:'Terlalu banyak percobaan. Coba lagi sebentar.' }, { status: 429 })
+    const body = await req.json();
+    const { nim, deviceId, coords } = body;
+
+    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0] || 'local';
+    const rateKey = deviceId ? `${ip}::${String(deviceId).slice(0, 8)}` : ip;
+
+    if (!rateLimit(rateKey, 5)) {
+      return NextResponse.json({
+        ok: false,
+        msg: 'Terlalu banyak percobaan. Tunggu sebentar, lalu coba lagi.'
+      }, { status: 429 });
     }
 
-    const { nim, deviceId, coords } = await req.json()
-    if (!/^\d{6,15}$/.test(String(nim))) {
-      return NextResponse.json({ ok:false, msg:'Format NIM tidak valid.' }, { status: 400 })
+
+    if (!/^\d{9}$/.test(String(nim))) {
+      return NextResponse.json({ ok:false, msg:'Format NIM harus 9 digit.' }, { status: 400 })
     }
+
     if (!GAS_URL) {
       return NextResponse.json({ ok:false, msg:'GAS_URL belum diset di .env.local' }, { status: 500 })
     }
@@ -40,7 +49,6 @@ export async function POST(req: Request) {
     const raw = await res.text()
 
     if (!ct.includes('application/json')) {
-      // kirim pesan jelas ke client agar kamu tahu kalau URL/akses GAS salah
       return NextResponse.json({
         ok:false,
         msg:`Balasan bukan JSON dari GAS. Status: ${res.status}.`
@@ -48,8 +56,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(JSON.parse(raw), { status: res.ok ? 200 : 500 })
-    } catch (e: unknown) {
+
+  } catch (e: unknown) {
     const err = e instanceof Error ? e.message : String(e)
     return NextResponse.json({ ok:false, msg: err }, { status: 500 })
-    }
+  }
 }
