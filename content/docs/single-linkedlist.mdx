@@ -1,0 +1,412 @@
+---
+title: Single Linked List
+description: Memahami konsep Single Linked List sebagai struktur data dinamis dalam pemrograman
+---
+
+**Single Linked List** adalah kumpulan elemen (node) yang saling terhubung melalui pointer, dimana setiap elemen memiliki data dan alamat elemen selanjutnya.  
+**Node** adalah unit dasar dalam linked list yang terdiri dari dua bagian: informasi data (info) dan pointer ke node selanjutnya (next).  
+**Address/Pointer** adalah alamat memori yang menunjuk ke lokasi node dalam linked list.
+
+Tanpa linked list, programmer harus menggunakan array dengan ukuran tetap yang tidak efisien untuk data dengan jumlah tidak pasti.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep Single Linked List** sebagai alternatif struktur data dinamis dibandingkan array statis.
+- **Mendeklarasikan dan menggunakan Single Linked List** dengan sintaks yang benar sesuai aturan bahasa pemrograman C++.
+- **Mengimplementasikan operasi dasar** seperti insertion, deletion, dan traversal pada Single Linked List.
+- **Menerapkan Single Linked List dalam program** untuk menyelesaikan masalah yang memerlukan struktur data dinamis.
+
+---
+
+## Mengapa Penting?
+
+1. **Ukuran Dinamis**  
+   Berbeda dengan array yang ukurannya tetap, Single Linked List dapat bertambah atau berkurang sesuai kebutuhan selama program berjalan. Ini sangat efisien untuk data dengan jumlah tidak pasti.
+
+2. **Efisiensi Insertion/Deletion**  
+   Operasi penambahan dan penghapusan data (terutama di bagian tengah) memiliki kompleksitas waktu yang konstan O(1) jika posisinya sudah diketahui.
+
+3. **Pengelolaan Memori Fleksibel**  
+   Memori dialokasikan secara dinamis sesuai kebutuhan, tidak ada pemborosan memori seperti pada array yang tidak terisi penuh.
+
+4. **Fondasi Struktur Data Lanjutan**  
+   Single Linked List merupakan dasar untuk memahami struktur data yang lebih kompleks seperti Stack, Queue, dan Tree.
+
+---
+
+## Masalah Tanpa Linked List
+
+Bayangkan membuat program untuk mengelola daftar mahasiswa yang jumlahnya tidak pasti:
+
+```cpp
+// Tanpa linked list - tidak efisien
+string mahasiswa[1000];  // Ukuran tetap, boros memori
+int jumlah = 0;
+
+// Menambah data di tengah memerlukan shifting
+for(int i = jumlah; i > posisi; i--) {
+    mahasiswa[i] = mahasiswa[i-1];
+}
+mahasiswa[posisi] = dataBaru;
+jumlah++;
+```
+
+**Masalah:**
+- Ukuran array harus ditentukan di awal (boros memori)
+- Insertion dan deletion di tengah memerlukan shifting
+- Tidak efisien untuk operasi yang sering mengubah ukuran data
+
+---
+
+## Konsep Single Linked List
+
+### Definisi dan Karakteristik
+
+Single Linked List memiliki karakteristik utama:
+- **Dinamis**: Ukuran dapat berubah selama runtime
+- **Sequential Access**: Elemen diakses secara berurutan dari awal
+- **Node-based**: Terdiri dari node yang saling terhubung
+- **Unidirectional**: Hanya dapat traversal ke satu arah (maju)
+
+### Visualisasi Single Linked List
+```
+Single Linked List dengan 4 node:
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Data │ Next │───▶│ Data │ Next │───▶│ Data │ Next │───▶│ Data │ NULL│
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+First                                                     Last
+```
+
+---
+
+## Struktur Node dan Definisi
+
+### Definisi Struktur Node
+```cpp
+typedef int infotype;
+typedef struct TElmtList *address;
+
+typedef struct TElmtList {
+    infotype info;  // Data yang disimpan
+    address next;   // Pointer ke node selanjutnya
+} ElmtList;
+
+typedef struct TList {
+    address first;  // Pointer ke node pertama
+} List;
+```
+
+### Konsep Dasar
+- **First(L)**: Alamat elemen pertama dalam list L
+- **Info(P)**: Nilai/data yang disimpan pada node yang ditunjuk P
+- **Next(P)**: Alamat elemen selanjutnya dari node yang ditunjuk P
+- **List Kosong**: First(L) = NULL
+- **Elemen Terakhir**: Next(P) = NULL
+
+---
+
+## Operasi Dasar Single Linked List
+
+### 1. Inisialisasi List Kosong
+```cpp
+void CreateEmpty(List *L) {
+    (*L).first = NULL;
+}
+```
+
+### 2. Mengecek List Kosong
+```cpp
+bool IsEmpty(List L) {
+    return L.first == NULL;
+}
+```
+
+### 3. Alokasi Node Baru
+```cpp
+address Allocation(infotype x) {
+    address NewElmt;
+    
+    NewElmt = new ElmtList;
+    NewElmt->info = x;
+    NewElmt->next = NULL;
+    
+    return NewElmt;
+}
+```
+
+### 4. Dealokasi Node
+```cpp
+void Deallocation(address hapus) {
+    delete hapus;
+}
+```
+
+---
+
+## Operasi Insertion (Penambahan Data)
+
+### Insert di Awal (InsertFirst)
+```cpp
+void InsertFirst(List *L, infotype x) {
+    address NewElmt;
+    
+    NewElmt = Allocation(x);
+    NewElmt->next = (*L).first;
+    (*L).first = NewElmt;
+}
+```
+
+### Insert Setelah Node Tertentu (InsertAfter)
+```cpp
+void InsertAfter(address PredElmt, infotype x) {
+    address NewElmt;
+    
+    NewElmt = Allocation(x);
+    NewElmt->next = PredElmt->next;
+    PredElmt->next = NewElmt;
+}
+```
+
+### Insert di Akhir (InsertLast)
+```cpp
+void InsertLast(List *L, infotype x) {
+    if (IsEmpty(*L)) {
+        InsertFirst(L, x);
+    } else {
+        address temp = (*L).first;
+        
+        // Cari node terakhir
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        
+        InsertAfter(temp, x);
+    }
+}
+```
+
+---
+
+## Operasi Deletion (Penghapusan Data)
+
+### Delete di Awal (DeleteFirst)
+```cpp
+void DeleteFirst(List *L, infotype *hapus) {
+    if (!IsEmpty(*L)) {
+        address temp = (*L).first;
+        
+        *hapus = temp->info;
+        (*L).first = (*L).first->next;
+        temp->next = NULL;
+        
+        Deallocation(temp);
+    }
+}
+```
+
+### Delete Setelah Node Tertentu (DeleteAfter)
+```cpp
+void DeleteAfter(address PredElmt, infotype *hapus) {
+    if (PredElmt->next != NULL) {
+        address temp = PredElmt->next;
+        
+        *hapus = temp->info;
+        PredElmt->next = temp->next;
+        temp->next = NULL;
+        
+        Deallocation(temp);
+    }
+}
+```
+
+### Delete di Akhir (DeleteLast)
+```cpp
+void DeleteLast(List *L, infotype *hapus) {
+    if (!IsEmpty(*L)) {
+        address temp = (*L).first;
+        address predTemp = NULL;
+        
+        // Cari node terakhir dan sebelumnya
+        while (temp->next != NULL) {
+            predTemp = temp;
+            temp = temp->next;
+        }
+        
+        if (temp == (*L).first) {
+            DeleteFirst(L, hapus);
+        } else {
+            DeleteAfter(predTemp, hapus);
+        }
+    }
+}
+```
+
+---
+
+## Traversal (Pembacaan Data)
+
+### Menampilkan Semua Elemen
+```cpp
+void PrintList(List L) {
+    address temp = L.first;
+    
+    cout << "Isi List: ";
+    while (temp != NULL) {
+        cout << temp->info << " ";
+        temp = temp->next;
+    }
+    cout << endl;
+}
+```
+
+### Contoh Program Lengkap
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    List data;
+    CreateEmpty(&data);
+    
+    int pilihan, nilai, hapus;
+    
+    do {
+        cout << "\n=== MENU SINGLE LINKED LIST ===" << endl;
+        cout << "1. Insert First" << endl;
+        cout << "2. Insert Last" << endl;
+        cout << "3. Delete First" << endl;
+        cout << "4. Delete Last" << endl;
+        cout << "5. Print List" << endl;
+        cout << "0. Exit" << endl;
+        cout << "Pilihan: ";
+        cin >> pilihan;
+        
+        switch(pilihan) {
+            case 1:
+                cout << "Masukkan nilai: ";
+                cin >> nilai;
+                InsertFirst(&data, nilai);
+                break;
+            case 2:
+                cout << "Masukkan nilai: ";
+                cin >> nilai;
+                InsertLast(&data, nilai);
+                break;
+            case 3:
+                DeleteFirst(&data, &hapus);
+                cout << "Data terhapus: " << hapus << endl;
+                break;
+            case 4:
+                DeleteLast(&data, &hapus);
+                cout << "Data terhapus: " << hapus << endl;
+                break;
+            case 5:
+                PrintList(data);
+                break;
+        }
+    } while(pilihan != 0);
+    
+    return 0;
+}
+```
+
+---
+
+## Latihan
+
+### Latihan 1: Sistem Nilai Siswa Dinamis
+**Objektif**: Membuat sistem penyimpanan nilai siswa menggunakan Single Linked List.
+
+**Spesifikasi**: 
+- **Input**: Nama siswa dan nilai (dapat ditambah kapan saja)
+- **Output**: Tampilkan semua data siswa terurut
+
+### Latihan 2: Insert dengan Urutan Tersorting
+**Objektif**: Implementasi insertion yang menjaga list tetap terurut.
+
+**Spesifikasi:**
+- Setiap data baru diinsert pada posisi yang tepat
+- List selalu dalam kondisi terurut ascending
+
+```cpp
+void InsertSorted(List *L, infotype x) {
+    if (IsEmpty(*L) || (*L).first->info > x) {
+        InsertFirst(L, x);
+    } else {
+        address temp = (*L).first;
+        
+        while (temp->next != NULL && temp->next->info < x) {
+            temp = temp->next;
+        }
+        
+        InsertAfter(temp, x);
+    }
+}
+```
+
+### Latihan 3: Pencarian dan Penghapusan Data
+**Objektif**: Sistem pencarian dan penghapusan data berdasarkan nilai.
+
+**Spesifikasi:**
+- Cari data dalam list
+- Hapus data jika ditemukan
+- Berikan informasi jika data tidak ditemukan
+
+### Latihan 4: Operasi List Lanjutan
+**Objektif**: Implementasi operasi tambahan pada Single Linked List.
+
+**Spesifikasi:** 
+- Hitung jumlah elemen dalam list
+- Cari nilai maksimum dan minimum
+- Reverse list (balik urutan)
+
+---
+
+## Algoritma Pencarian dalam Single Linked List
+
+Pencarian adalah operasi penting dalam Single Linked List:
+
+```cpp
+address Search(List L, infotype x) {
+    address temp = L.first;
+    bool found = false;
+    
+    while (temp != NULL && !found) {
+        if (temp->info == x) {
+            found = true;
+        } else {
+            temp = temp->next;
+        }
+    }
+    
+    return temp;  // NULL jika tidak ditemukan
+}
+
+// Penggunaan
+address hasil = Search(data, 25);
+if (hasil != NULL) {
+    cout << "Data ditemukan: " << hasil->info << endl;
+} else {
+    cout << "Data tidak ditemukan" << endl;
+}
+```
+
+---
+
+## Catatan 
+
+- **Memory Management**: Selalu lakukan dealokasi untuk menghindari memory leak.
+- **Null Pointer**: Selalu cek apakah pointer tidak NULL sebelum mengakses.
+- **Traversal**: Gunakan loop while dengan kondisi temp != NULL.
+- **Edge Cases**: Perhatikan kasus list kosong dan list dengan satu elemen.
+- **Complexity**: Insertion/Deletion O(1), Search/Access O(n).
+
+---
+
+*Materi - Single Linked List*
+
+---
