@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label"
 
 // ================== KONFIG FRONTEND (untuk preview UX saja) ==================
 const CAMPUS = { lat: -5.3603738, lng: 105.3103092 } // Gedung Labtek 1 ITERA
-const RADIUS_M = 300
+const RADIUS_M = 200
 // Kamis 16:00–17:30 WIB
 const WINDOW = { day: 4 as 0|1|2|3|4|5|6, start: {h:16, m:0}, end:{h:17, m:30} }
 
