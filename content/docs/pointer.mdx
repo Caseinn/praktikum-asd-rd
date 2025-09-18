@@ -242,21 +242,42 @@ int main() {
 - **Proses**: Fungsi menggunakan passing by reference
 - **Output**: Nilai 3 variabel setelah dikali 2
 
-### Latihan 2: Operasi Matematika dengan Pointer
+### **Latihan 2: Operasi Matematika dengan Pointer**
+
 **Objektif**: Implementasi persamaan matematika menggunakan pointer.
 
 **Spesifikasi:**
-- **Parameter**: `*x` (awal: 0), `y` (input user), `*z` (awal: 1)
-- **Proses**: Hitung berdasarkan rumus yang diberikan
-- **Output**: Nilai akhir `*x` dan `*z`
+- Sebuah sub program memiliki parameter `*x`, `y`, dan `*z`
+- Mula-mula nilai `*x` adalah 0 dan `*z` adalah 1
+- Nilai `y` ditentukan oleh pengguna
+- Hitunglah `*x` dan `*z` jika diketahui persamaan:
 
-### Latihan 3: Jumlah Deret
-**Objektif**: Fungsi void yang menghitung jumlahan 1 sampai n.
+**Rumus Perhitungan:**
+*Clue Gunakan for loop*
+
+- *x = Σ(2 × n) untuk n = 1 sampai y
+- *z = ∏(3 + n) untuk n = 1 sampai y
+
+**Parameter**: 
+- `*x` (pointer, nilai awal: 0)
+- `y` (input dari pengguna) 
+- `*z` (pointer, nilai awal: 1)
+
+**Output**: Nilai akhir `*x` dan `*z` setelah perhitungan
+
+### **Latihan 3: Prosedur Jumlahan**
+
+**Objektif**: Implementasi prosedur void untuk menghitung jumlahan bilangan.
 
 **Spesifikasi:**
-- **Parameter**: `*x` (hasil), `y` (batas atas)
-- **Proses**: `*x = 1 + 2 + 3 + ... + y`
-- **Output**: Hasil penjumlahan melalui pointer
+- Sebuah sub program memiliki parameter `*x` dan `y`
+- Nilai `y` ditentukan oleh pengguna
+
+**Parameter**: 
+- `*x` (pointer, untuk menyimpan hasil jumlahan)
+- `y` (input dari pengguna, batas atas penjumlahan)
+
+**Output**: Nilai `*x` yang berisi hasil penjumlahan 1 sampai y
 
 ---
 
