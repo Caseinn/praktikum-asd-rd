@@ -143,9 +143,10 @@ typedef struct List {
 
 ---
 
-## Operasi Dasar Double Linked List
+# Operasi Dasar Double Linked List
 
-### 1. Inisialisasi List Kosong
+## 1. Inisialisasi List Kosong
+
 ```cpp
 void CreateEmpty(List *L) {
     (*L).First = NULL;
@@ -153,45 +154,42 @@ void CreateEmpty(List *L) {
 }
 ```
 
-### 2. Mengecek List Kosong
+## 2. Mengecek List Kosong
+
 ```cpp
 bool IsEmpty(List L) {
     return ((L.First == NULL) && (L.Last == NULL));
 }
 ```
 
-### 3. Alokasi Node Baru
+## 3. Alokasi Node Baru
+
 ```cpp
 address Allocation(infotype x) {
-    address NewElmt;
-    
-    NewElmt = (ElmtList*) malloc(sizeof(ElmtList));
-    if (NewElmt != NULL) {
-        NewElmt->info = x;
-        NewElmt->next = NULL;
-        NewElmt->prev = NULL;
-    }
-    
+    address NewElmt = new ElmtList;
+    NewElmt->info = x;
+    NewElmt->next = NULL;
+    NewElmt->prev = NULL;
     return NewElmt;
+
 }
 ```
 
-### 4. Dealokasi Node
+## 4. Dealokasi Node
+
 ```cpp
 void Deallocation(address hapus) {
-    free(hapus);
+    delete hapus;
 }
 ```
-
----
 
 ## Operasi Insertion (Penambahan Data)
 
 ### Insert di Awal (InsertFirst)
+
 ```cpp
 void InsertFirst(List *L, infotype x) {
-    address NewElmt;
-    NewElmt = Allocation(x);
+    address NewElmt = Allocation(x);
     
     if (NewElmt != NULL) {
         NewElmt->next = (*L).First;
@@ -208,10 +206,10 @@ void InsertFirst(List *L, infotype x) {
 ```
 
 ### Insert Setelah Node Tertentu (InsertAfter)
+
 ```cpp
 void InsertAfter(List *L, address PredElmt, infotype x) {
-    address NewElmt;
-    NewElmt = Allocation(x);
+    address NewElmt = Allocation(x);
     
     if (NewElmt != NULL) {
         // Set pointer new element
@@ -232,10 +230,10 @@ void InsertAfter(List *L, address PredElmt, infotype x) {
 ```
 
 ### Insert di Akhir (InsertLast)
+
 ```cpp
 void InsertLast(List *L, infotype x) {
-    address NewElmt;
-    NewElmt = Allocation(x);
+    address NewElmt = Allocation(x);
     
     if (NewElmt != NULL) {
         NewElmt->prev = (*L).Last;
@@ -251,16 +249,14 @@ void InsertLast(List *L, infotype x) {
 }
 ```
 
----
-
 ## Operasi Deletion (Penghapusan Data)
 
 ### Delete di Awal (DeleteFirst)
+
 ```cpp
 void DeleteFirst(List *L, infotype *hapus) {
     if (!IsEmpty(*L)) {
-        address temp;
-        temp = (*L).First;
+        address temp = (*L).First;
         *hapus = temp->info;
         
         if ((*L).First == (*L).Last) {
@@ -279,11 +275,11 @@ void DeleteFirst(List *L, infotype *hapus) {
 ```
 
 ### Delete Setelah Node Tertentu (DeleteAfter)
+
 ```cpp
 void DeleteAfter(address pred, infotype *hapus) {
     if (pred->next != NULL) {
-        address temp;
-        temp = pred->next;
+        address temp = pred->next;
         *hapus = temp->info;
         
         // Update predecessor
@@ -304,11 +300,11 @@ void DeleteAfter(address pred, infotype *hapus) {
 ```
 
 ### Delete di Akhir (DeleteLast)
+
 ```cpp
 void DeleteLast(List *L, infotype *hapus) {
     if (!IsEmpty(*L)) {
-        address temp;
-        temp = (*L).Last;
+        address temp = (*L).Last;
         *hapus = temp->info;
         
         if ((*L).First == (*L).Last) {
@@ -326,35 +322,35 @@ void DeleteLast(List *L, infotype *hapus) {
 }
 ```
 
----
-
 ## Traversal (Pembacaan Data)
 
 ### Traversal Maju (Forward)
+
 ```cpp
 void PrintListForward(List L) {
     address temp = L.First;
     
     cout << "List (Forward): ";
-    while (temp != NULL) {
+    while (temp != nullptr) {
         cout << temp->info << " ";
         temp = temp->next;
     }
-    cout << endl;
+    cout << std::endl;
 }
 ```
 
 ### Traversal Mundur (Backward)
+
 ```cpp
 void PrintListBackward(List L) {
     address temp = L.Last;
     
     cout << "List (Backward): ";
-    while (temp != NULL) {
+    while (temp != nullptr) {
         cout << temp->info << " ";
         temp = temp->prev;
     }
-    cout << endl;
+    cout << std::endl;
 }
 ```
 
