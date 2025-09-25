@@ -73,12 +73,25 @@ Single Linked List memiliki karakteristik utama:
 - **Unidirectional**: Hanya dapat traversal ke satu arah (maju)
 
 ### Visualisasi Single Linked List
+
+#### Struktur Node
 ```
-Single Linked List dengan 4 node:
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│ Data │ Next │───▶│ Data │ Next │───▶│ Data │ Next │───▶│ Data │ NULL│
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-First                                                     Last
+┌──────┬─────┐
+│ Data │Next │  ← Setiap node memiliki 2 komponen
+└──────┴─────┘
+   ↑      ↑
+   │      └── Pointer ke node selanjutnya
+   └─────── Data/informasi yang disimpan
+```
+
+```
+First
+  ↓
+┌──────┬─────┐   ┌──────┬─────┐   ┌──────┬─────┐   ┌──────┬─────┐
+│  10  │  ●──┼──→│  20  │  ●──┼──→│  30  │  ●──┼──→│  40  │NULL │
+└──────┴─────┘   └──────┴─────┘   └──────┴─────┘   └──────┴─────┘
+                                                              ↑
+                                                            Last
 ```
 
 ---
@@ -348,22 +361,6 @@ void InsertSorted(List *L, infotype x) {
 }
 ```
 
-### Latihan 3: Pencarian dan Penghapusan Data
-**Objektif**: Sistem pencarian dan penghapusan data berdasarkan nilai.
-
-**Spesifikasi:**
-- Cari data dalam list
-- Hapus data jika ditemukan
-- Berikan informasi jika data tidak ditemukan
-
-### Latihan 4: Operasi List Lanjutan
-**Objektif**: Implementasi operasi tambahan pada Single Linked List.
-
-**Spesifikasi:** 
-- Hitung jumlah elemen dalam list
-- Cari nilai maksimum dan minimum
-- Reverse list (balik urutan)
-
 ---
 
 ## Algoritma Pencarian dalam Single Linked List
@@ -394,16 +391,6 @@ if (hasil != NULL) {
     cout << "Data tidak ditemukan" << endl;
 }
 ```
-
----
-
-## Catatan 
-
-- **Memory Management**: Selalu lakukan dealokasi untuk menghindari memory leak.
-- **Null Pointer**: Selalu cek apakah pointer tidak NULL sebelum mengakses.
-- **Traversal**: Gunakan loop while dengan kondisi temp != NULL.
-- **Edge Cases**: Perhatikan kasus list kosong dan list dengan satu elemen.
-- **Complexity**: Insertion/Deletion O(1), Search/Access O(n).
 
 ---
 

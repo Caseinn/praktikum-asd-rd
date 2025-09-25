@@ -1,0 +1,557 @@
+---
+title: Double Linked List
+description: Memahami konsep Double Linked List sebagai struktur data dinamis dengan akses bidirectional dalam pemrograman
+---
+
+**Double Linked List** adalah kumpulan elemen (node) yang saling terhubung melalui dua pointer, dimana setiap elemen memiliki data, alamat elemen sebelumnya (prev), dan alamat elemen selanjutnya (next).  
+**Node** adalah unit dasar dalam double linked list yang terdiri dari tiga bagian: informasi data (info), pointer ke node sebelumnya (prev), dan pointer ke node selanjutnya (next).  
+**Address/Pointer** adalah alamat memori yang menunjuk ke lokasi node dalam double linked list.
+
+Dengan double linked list, programmer dapat melakukan navigasi ke kedua arah (maju dan mundur) dengan efisien, sangat berguna untuk operasi yang sering mengakses elemen predecessor dan successor.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep Double Linked List** sebagai struktur data dinamis dengan akses bidirectional.
+- **Mendeklarasikan dan menggunakan Double Linked List** dengan sintaks yang benar sesuai aturan bahasa pemrograman C++.
+- **Mengimplementasikan operasi dasar** seperti insertion, deletion, dan traversal pada Double Linked List.
+- **Menerapkan Double Linked List dalam program** untuk menyelesaikan masalah yang memerlukan navigasi dua arah.
+
+---
+
+## Mengapa Penting?
+
+1. **Akses Bidirectional**  
+   Berbeda dengan single linked list, Double Linked List memungkinkan traversal ke kedua arah (maju dan mundur), sangat efisien untuk operasi yang memerlukan akses ke predecessor.
+
+2. **Efisiensi Delete Operation**  
+   Operasi penghapusan menjadi lebih efisien karena tidak perlu mencari predecessor, kompleksitas waktu tetap O(1) jika alamat node sudah diketahui.
+
+3. **Navigasi Fleksibel**  
+   Memungkinkan implementasi struktur data seperti browser history, undo/redo operations, dan playlist musik dengan navigasi maju-mundur.
+
+4. **Optimasi Algoritma**  
+   Menghindari memorisasi predecessor pada beberapa algoritma, sehingga kode menjadi lebih sederhana dan efisien.
+
+---
+
+## Masalah dengan Single Linked List
+
+Bayangkan membuat aplikasi music player yang memerlukan navigasi maju-mundur:
+
+```cpp
+// Single Linked List - tidak efisien untuk mundur
+struct Song {
+    string title;
+    Song* next;
+};
+
+// Untuk mundur, harus traversal dari awal
+Song* getPrevious(Song* current, Song* head) {
+    Song* temp = head;
+    while(temp != NULL && temp->next != current) {
+        temp = temp->next;
+    }
+    return temp;  // O(n) complexity
+}
+```
+
+**Masalah:**
+- Navigasi mundur memerlukan traversal dari awal (O(n))
+- Operasi delete memerlukan pencarian predecessor
+- Tidak efisien untuk aplikasi yang sering navigate kedua arah
+
+---
+
+## Konsep Double Linked List
+
+### Definisi dan Karakteristik
+
+Double Linked List memiliki karakteristik utama:
+- **Bidirectional**: Dapat traversal ke kedua arah (maju dan mundur)
+- **Dinamis**: Ukuran dapat berubah selama runtime
+- **Node-based**: Terdiri dari node yang saling terhubung dengan dua pointer
+- **Efficient Access**: Akses ke predecessor dan successor dalam O(1)
+
+### Visualisasi Double Linked List
+
+#### Struktur Node
+```
+┌─────┬──────┬─────┐
+│Prev │ Data │Next │  ← Setiap node memiliki 3 komponen
+└─────┴──────┴─────┘
+   ↑      ↑      ↑
+   │      │      └── Pointer ke node selanjutnya
+   │      └─────── Data/informasi yang disimpan  
+   └────────────── Pointer ke node sebelumnya
+```
+
+#### Visualisasi Sederhana dengan Panah
+```
+NULL ←→ [10] ←→ [20] ←→ [30] ←→ [40] ←→ NULL
+ ↑                                      ↑
+First                                 Last
+
+Keterangan:
+← : Pointer prev (mundur)
+→ : Pointer next (maju)  
+[n]: Node dengan data n
+```
+
+#### Traversal Direction
+```
+Forward Traversal (menggunakan next):
+First → [10] → [20] → [30] → [40] → NULL
+
+Backward Traversal (menggunakan prev):  
+Last ← [40] ← [30] ← [20] ← [10] ← NULL
+```
+
+---
+
+## Struktur Node dan Definisi
+
+### Definisi Struktur Node
+```cpp
+typedef int infotype;
+typedef struct tElmtList *address;
+
+typedef struct tElmtList {
+    infotype info;  // Data yang disimpan
+    address prev;   // Pointer ke node sebelumnya
+    address next;   // Pointer ke node selanjutnya
+} ElmtList;
+
+typedef struct List {
+    address First;  // Pointer ke node pertama
+    address Last;   // Pointer ke node terakhir
+} List;
+```
+
+### Konsep Dasar
+- **First(L)**: Alamat elemen pertama dalam list L
+- **Last(L)**: Alamat elemen terakhir dalam list L
+- **Info(P)**: Nilai/data yang disimpan pada node yang ditunjuk P
+- **Next(P)**: Alamat elemen selanjutnya dari node yang ditunjuk P
+- **Prev(P)**: Alamat elemen sebelumnya dari node yang ditunjuk P
+- **List Kosong**: First(L) = NULL && Last(L) = NULL
+- **Elemen Pertama**: Prev(First(L)) = NULL
+- **Elemen Terakhir**: Next(Last(L)) = NULL
+
+---
+
+## Operasi Dasar Double Linked List
+
+### 1. Inisialisasi List Kosong
+```cpp
+void CreateEmpty(List *L) {
+    (*L).First = NULL;
+    (*L).Last = NULL;
+}
+```
+
+### 2. Mengecek List Kosong
+```cpp
+bool IsEmpty(List L) {
+    return ((L.First == NULL) && (L.Last == NULL));
+}
+```
+
+### 3. Alokasi Node Baru
+```cpp
+address Allocation(infotype x) {
+    address NewElmt;
+    
+    NewElmt = (ElmtList*) malloc(sizeof(ElmtList));
+    if (NewElmt != NULL) {
+        NewElmt->info = x;
+        NewElmt->next = NULL;
+        NewElmt->prev = NULL;
+    }
+    
+    return NewElmt;
+}
+```
+
+### 4. Dealokasi Node
+```cpp
+void Deallocation(address hapus) {
+    free(hapus);
+}
+```
+
+---
+
+## Operasi Insertion (Penambahan Data)
+
+### Insert di Awal (InsertFirst)
+```cpp
+void InsertFirst(List *L, infotype x) {
+    address NewElmt;
+    NewElmt = Allocation(x);
+    
+    if (NewElmt != NULL) {
+        NewElmt->next = (*L).First;
+        
+        if (!IsEmpty(*L)) {
+            ((*L).First)->prev = NewElmt;
+        } else {
+            (*L).Last = NewElmt;
+        }
+        
+        (*L).First = NewElmt;
+    }
+}
+```
+
+### Insert Setelah Node Tertentu (InsertAfter)
+```cpp
+void InsertAfter(List *L, address PredElmt, infotype x) {
+    address NewElmt;
+    NewElmt = Allocation(x);
+    
+    if (NewElmt != NULL) {
+        // Set pointer new element
+        NewElmt->next = PredElmt->next;
+        NewElmt->prev = PredElmt;
+        
+        // Update next element jika ada
+        if (PredElmt->next != NULL) {
+            (PredElmt->next)->prev = NewElmt;
+        } else {
+            (*L).Last = NewElmt;  // New element adalah last
+        }
+        
+        // Update predecessor
+        PredElmt->next = NewElmt;
+    }
+}
+```
+
+### Insert di Akhir (InsertLast)
+```cpp
+void InsertLast(List *L, infotype x) {
+    address NewElmt;
+    NewElmt = Allocation(x);
+    
+    if (NewElmt != NULL) {
+        NewElmt->prev = (*L).Last;
+        
+        if (!IsEmpty(*L)) {
+            ((*L).Last)->next = NewElmt;
+        } else {
+            (*L).First = NewElmt;
+        }
+        
+        (*L).Last = NewElmt;
+    }
+}
+```
+
+---
+
+## Operasi Deletion (Penghapusan Data)
+
+### Delete di Awal (DeleteFirst)
+```cpp
+void DeleteFirst(List *L, infotype *hapus) {
+    if (!IsEmpty(*L)) {
+        address temp;
+        temp = (*L).First;
+        *hapus = temp->info;
+        
+        if ((*L).First == (*L).Last) {
+            // Hanya ada satu elemen
+            (*L).Last = NULL;
+        } else {
+            (((*L).First)->next)->prev = NULL;
+        }
+        
+        (*L).First = (*L).First->next;
+        temp->next = NULL;
+        
+        Deallocation(temp);
+    }
+}
+```
+
+### Delete Setelah Node Tertentu (DeleteAfter)
+```cpp
+void DeleteAfter(address pred, infotype *hapus) {
+    if (pred->next != NULL) {
+        address temp;
+        temp = pred->next;
+        *hapus = temp->info;
+        
+        // Update predecessor
+        pred->next = temp->next;
+        
+        // Update successor jika ada
+        if (temp->next != NULL) {
+            (temp->next)->prev = pred;
+        }
+        
+        // Clean up
+        temp->next = NULL;
+        temp->prev = NULL;
+        
+        Deallocation(temp);
+    }
+}
+```
+
+### Delete di Akhir (DeleteLast)
+```cpp
+void DeleteLast(List *L, infotype *hapus) {
+    if (!IsEmpty(*L)) {
+        address temp;
+        temp = (*L).Last;
+        *hapus = temp->info;
+        
+        if ((*L).First == (*L).Last) {
+            // Hanya ada satu elemen
+            (*L).First = NULL;
+        } else {
+            (temp->prev)->next = NULL;
+        }
+        
+        (*L).Last = temp->prev;
+        temp->prev = NULL;
+        
+        Deallocation(temp);
+    }
+}
+```
+
+---
+
+## Traversal (Pembacaan Data)
+
+### Traversal Maju (Forward)
+```cpp
+void PrintListForward(List L) {
+    address temp = L.First;
+    
+    cout << "List (Forward): ";
+    while (temp != NULL) {
+        cout << temp->info << " ";
+        temp = temp->next;
+    }
+    cout << endl;
+}
+```
+
+### Traversal Mundur (Backward)
+```cpp
+void PrintListBackward(List L) {
+    address temp = L.Last;
+    
+    cout << "List (Backward): ";
+    while (temp != NULL) {
+        cout << temp->info << " ";
+        temp = temp->prev;
+    }
+    cout << endl;
+}
+```
+
+---
+
+## Contoh Program Lengkap
+
+```cpp
+#include <iostream>
+#include <cstdlib>
+using namespace std;
+
+// Definisi struktur dan fungsi-fungsi di atas...
+
+int main() {
+    List data;
+    CreateEmpty(&data);
+    
+    int pilihan, nilai, hapus;
+    
+    do {
+        cout << "\n=== MENU DOUBLE LINKED LIST ===" << endl;
+        cout << "1. Insert First" << endl;
+        cout << "2. Insert Last" << endl;
+        cout << "3. Delete First" << endl;
+        cout << "4. Delete Last" << endl;
+        cout << "5. Print Forward" << endl;
+        cout << "6. Print Backward" << endl;
+        cout << "7. Check Empty" << endl;
+        cout << "0. Exit" << endl;
+        cout << "Pilihan: ";
+        cin >> pilihan;
+        
+        switch(pilihan) {
+            case 1:
+                cout << "Masukkan nilai: ";
+                cin >> nilai;
+                InsertFirst(&data, nilai);
+                cout << "Data berhasil ditambahkan di awal" << endl;
+                break;
+            case 2:
+                cout << "Masukkan nilai: ";
+                cin >> nilai;
+                InsertLast(&data, nilai);
+                cout << "Data berhasil ditambahkan di akhir" << endl;
+                break;
+            case 3:
+                if (!IsEmpty(data)) {
+                    DeleteFirst(&data, &hapus);
+                    cout << "Data terhapus: " << hapus << endl;
+                } else {
+                    cout << "List kosong!" << endl;
+                }
+                break;
+            case 4:
+                if (!IsEmpty(data)) {
+                    DeleteLast(&data, &hapus);
+                    cout << "Data terhapus: " << hapus << endl;
+                } else {
+                    cout << "List kosong!" << endl;
+                }
+                break;
+            case 5:
+                PrintListForward(data);
+                break;
+            case 6:
+                PrintListBackward(data);
+                break;
+            case 7:
+                if (IsEmpty(data)) {
+                    cout << "List kosong" << endl;
+                } else {
+                    cout << "List tidak kosong" << endl;
+                }
+                break;
+        }
+    } while(pilihan != 0);
+    
+    return 0;
+}
+```
+
+---
+
+## Latihan
+
+### Latihan 1: Sistem Data Mahasiswa dengan Navigasi
+**Objektif**: Membuat sistem penyimpanan data mahasiswa (nama, alamat, IP) menggunakan Double Linked List.
+
+**Spesifikasi**: 
+- **Input**: Data mahasiswa dapat ditambah di awal atau akhir
+- **Output**: Tampilkan data dari depan ke belakang dan sebaliknya
+- **Fitur**: Pencarian berdasarkan nama, tampil urutan terbalik
+
+```cpp
+struct Mahasiswa {
+    string nama;
+    string alamat;
+    float ip;
+    address prev;
+    address next;
+};
+
+void CariMahasiswa(List L, string nama) {
+    address temp = L.First;
+    bool found = false;
+    
+    while (temp != NULL && !found) {
+        if (temp->nama == nama) {
+            found = true;
+            cout << "Ditemukan:" << endl;
+            cout << "Nama: " << temp->nama << endl;
+            cout << "Alamat: " << temp->alamat << endl;
+            cout << "IP: " << temp->ip << endl;
+        } else {
+            temp = temp->next;
+        }
+    }
+    
+    if (!found) {
+        cout << "Mahasiswa tidak ditemukan" << endl;
+    }
+}
+```
+
+---
+
+## Algoritma Pencarian dalam Double Linked List
+
+### Pencarian dari Depan
+```cpp
+address SearchForward(List L, infotype x) {
+    address temp = L.First;
+    
+    while (temp != NULL) {
+        if (temp->info == x) {
+            return temp;
+        }
+        temp = temp->next;
+    }
+    
+    return NULL;  // Tidak ditemukan
+}
+```
+
+### Pencarian dari Belakang
+```cpp
+address SearchBackward(List L, infotype x) {
+    address temp = L.Last;
+    
+    while (temp != NULL) {
+        if (temp->info == x) {
+            return temp;
+        }
+        temp = temp->prev;
+    }
+    
+    return NULL;  // Tidak ditemukan
+}
+```
+
+### Pencarian Optimized (Bidirectional)
+```cpp
+address SearchOptimized(List L, infotype x) {
+    address tempForward = L.First;
+    address tempBackward = L.Last;
+    
+    // Pencarian dari kedua ujung sekaligus
+    while (tempForward != NULL && tempBackward != NULL) {
+        if (tempForward->info == x) {
+            return tempForward;
+        }
+        if (tempBackward->info == x) {
+            return tempBackward;
+        }
+        
+        if (tempForward == tempBackward) {
+            break;  // Bertemu di tengah
+        }
+        
+        tempForward = tempForward->next;
+        tempBackward = tempBackward->prev;
+        
+        if (tempForward == tempBackward) {
+            if (tempForward->info == x) {
+                return tempForward;
+            }
+            break;
+        }
+    }
+    
+    return NULL;  // Tidak ditemukan
+}
+```
+
+---
+
+*Materi - Double Linked List*
+
+---
