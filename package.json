@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
@@ -17,6 +18,8 @@
     "fumadocs-core": "15.7.10",
     "fumadocs-mdx": "11.9.0",
     "fumadocs-ui": "15.7.10",
+    "google-auth-library": "^10.3.0",
+    "googleapis": "^160.0.0",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "react": "^19.1.1",
