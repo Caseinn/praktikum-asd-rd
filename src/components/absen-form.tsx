@@ -239,7 +239,7 @@ async function onSubmit(e: React.FormEvent) {
 
           {/* Auth */}
           {!user ? (
-            <Button onClick={handleGoogleLogin} className="w-full gap-1.5 py-2" aria-label="Login dengan Google">
+            <Button onClick={handleGoogleLogin} className="w-full gap-1.5 py-2" aria-label="Login dengan Google" disabled={!inWindow}>
               <LogIn className="size-3.5" />
               <span className="text-sm">Login dengan Google</span>
             </Button>
