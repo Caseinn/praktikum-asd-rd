@@ -1,6 +1,6 @@
 // app/api/auth/callback/route.ts
 import { google } from 'googleapis'
-import { OAuth2Client } from 'google-auth-library'
+import { OAuth2Client, type TokenPayload } from 'google-auth-library'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -18,6 +18,15 @@ const oauth2Client = new google.auth.OAuth2(
   CLIENT_SECRET,
   `${APP_URL}/api/auth/callback`
 )
+
+type SessionPayload = {
+  sub: string
+  email: string
+  nim: string | null
+  name: string | null
+  picture: string | null
+  iat: number
+}
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
@@ -60,42 +69,46 @@ export async function GET(request: NextRequest) {
     // verify ID token (audience & issuer)
     const verifier = new OAuth2Client(CLIENT_ID)
     const ticket = await verifier.verifyIdToken({ idToken: tokens.id_token, audience: CLIENT_ID })
-    const payload = ticket.getPayload()
-    if (!payload) {
+    const payload: TokenPayload | undefined = ticket.getPayload()
+
+    if (!payload || typeof payload.email !== 'string' || typeof payload.sub !== 'string') {
       const res = NextResponse.json({ error: 'Invalid ID token payload' }, { status: 400 }); cleanup(res); return res
     }
 
-    const email = payload.email || ''
+    const email = payload.email
     if (!email.endsWith(`@${DOMAIN}`)) {
       const res = NextResponse.json({ error: `Email harus @${DOMAIN}` }, { status: 403 }); cleanup(res); return res
     }
 
     // Try derive NIM from email: name.#########@student.itera.ac.id
-    const nim = (email.match(/\.(\d{9})@student\.itera\.ac\.id$/)?.[1]) || null
+    const nimMatch = email.match(/\.(\d{9})@student\.itera\.ac\.id$/)
+    const nim: string | null = nimMatch ? nimMatch[1] : null
 
-    const sessionValue = JSON.stringify({
+    const sessionValue: SessionPayload = {
       sub: payload.sub,
       email,
       nim,
-      name: payload.name || null,
-      picture: payload.picture || null,
+      name: (typeof payload.name === 'string' ? payload.name : null) ?? null,
+      picture: (typeof payload.picture === 'string' ? payload.picture : null) ?? null,
       iat: Math.floor(Date.now() / 1000),
-    })
+    }
 
     const res = NextResponse.redirect(new URL('/absen', APP_URL))
     res.cookies.set({
       name: SESSION_COOKIE_NAME,
-      value: sessionValue,
+      value: JSON.stringify(sessionValue),
       httpOnly: true,
       sameSite: 'lax',
-      secure: true,
+      // Use secure only in prod to allow localhost testing
+      secure: process.env.NODE_ENV === 'production',
       path: '/',
       maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
     })
     cleanup(res)
     return res
-  } catch (err: any) {
-    const res = NextResponse.json({ error: 'Login gagal', detail: err?.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    const res = NextResponse.json({ error: 'Login gagal', detail: message }, { status: 500 })
     cleanup(res)
     return res
   }
