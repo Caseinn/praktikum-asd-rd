@@ -48,6 +48,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="id" className={inter.className} suppressHydrationWarning>
       <head>
+        <meta name="google-site-verification" content="1KI_k0smkrnjh8xv7tnvvsSeD9YGTbZPnxJBtKveNSE" />
         <link rel="icon" href="/logo.png" sizes="any" />
       </head>
       <body className="flex flex-col min-h-screen">
