@@ -23,6 +23,18 @@ function isValidCoords(value: unknown): value is Coords {
   )
 }
 
+// Type guard for GAS response
+function isValidGASResponse(data: unknown): data is { ok: boolean; msg: string; already?: boolean } {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'ok' in data &&
+    typeof (data as Record<string, unknown>).ok === 'boolean' &&
+    'msg' in data &&
+    typeof (data as Record<string, unknown>).msg === 'string'
+  )
+}
+
 export async function POST(req: Request) {
   if (!GAS_URL) {
     return NextResponse.json({ ok: false, msg: 'GAS URL not configured' }, { status: 500 })
@@ -55,10 +67,10 @@ export async function POST(req: Request) {
   let payload: { ok: boolean; msg: string; already?: boolean }
   try {
     const json = await res.json()
-    if (typeof json === 'object' && json !== null && typeof (json as any).ok === 'boolean') {
-      payload = json as typeof payload
+    if (isValidGASResponse(json)) {
+      payload = json
     } else {
-      throw new Error('Invalid')
+      throw new Error('Invalid shape')
     }
   } catch {
     payload = { ok: false, msg: 'Invalid GAS response' }
