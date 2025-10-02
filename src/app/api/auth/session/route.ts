@@ -1,17 +1,16 @@
 // app/api/session/route.ts
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/session'
 import { NextResponse } from 'next/server'
 
-export const runtime = 'nodejs'
-
 export async function GET() {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get(process.env.SESSION_COOKIE_NAME || 'user_session')?.value
-  if (raw) {
-    try {
-      const user = JSON.parse(raw)
-      return NextResponse.json({ user })
-    } catch {}
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ user: null })
   }
-  return NextResponse.json({ user: null })
+  return NextResponse.json({
+    user: {
+      email: session.email,
+      nim: session.nim,
+    }
+  })
 }

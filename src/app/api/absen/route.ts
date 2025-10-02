@@ -1,26 +1,25 @@
 // app/api/absen/route.ts
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/session'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
-const SESSION_COOKIE = process.env.SESSION_COOKIE_NAME || 'user_session'
 const GAS_URL = process.env.GAS_ABSEN_URL!
 const DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || 'student.itera.ac.id'
 
-type Coords = { lat: number; lng: number }
-type Session = { email: string; nim?: string } & Record<string, unknown>
-
-function parseJSON<T>(raw: string): T | null {
-  try { return JSON.parse(raw) as T } catch { return null }
+interface Coords {
+  lat: number
+  lng: number
 }
 
-function isCoords(v: unknown): v is Coords {
+function isValidCoords(value: unknown): value is Coords {
   return (
-    typeof v === 'object' &&
-    v !== null &&
-    typeof (v as Record<string, unknown>).lat === 'number' &&
-    typeof (v as Record<string, unknown>).lng === 'number'
+    value !== null &&
+    typeof value === 'object' &&
+    'lat' in value &&
+    'lng' in value &&
+    typeof (value as Record<string, unknown>).lat === 'number' &&
+    typeof (value as Record<string, unknown>).lng === 'number'
   )
 }
 
@@ -29,35 +28,41 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, msg: 'GAS URL not configured' }, { status: 500 })
   }
 
-  const cookieStore = await cookies()
-  const raw = cookieStore.get(SESSION_COOKIE)?.value
-  if (!raw) {
+  const session = await getSession()
+  if (!session) {
     return NextResponse.json({ ok: false, msg: 'Unauthorized' }, { status: 401 })
   }
 
-  const session = parseJSON<Session>(raw)
-  if (!session || typeof session.email !== 'string') {
-    return NextResponse.json({ ok: false, msg: 'Invalid session' }, { status: 401 })
-  }
-
-  const email = session.email
-  if (!email.endsWith(`@${DOMAIN}`)) {
+  if (!session.email.endsWith(`@${DOMAIN}`)) {
     return NextResponse.json({ ok: false, msg: 'Unauthorized' }, { status: 401 })
   }
 
-  // Body typing
-  type Body = { coords?: unknown }
-  const body = (await req.json().catch(() => ({}))) as Body
-  const coords = isCoords(body.coords) ? body.coords : null
+  let body: { coords?: unknown } = {}
+  try {
+    body = await req.json()
+  } catch {
+    // leave empty
+  }
+
+  const coords = isValidCoords(body.coords) ? body.coords : null
 
   const res = await fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, coords }),
+    body: JSON.stringify({ email: session.email, coords }),
   })
 
-  const data = (await res.json().catch(() => null)) as unknown
-  const payload = (data && typeof data === 'object') ? data : { ok: false, msg: 'Invalid GAS response' }
+  let payload: { ok: boolean; msg: string; already?: boolean }
+  try {
+    const json = await res.json()
+    if (typeof json === 'object' && json !== null && typeof (json as any).ok === 'boolean') {
+      payload = json as typeof payload
+    } else {
+      throw new Error('Invalid')
+    }
+  } catch {
+    payload = { ok: false, msg: 'Invalid GAS response' }
+  }
 
   return NextResponse.json(payload, { status: res.ok ? 200 : 400 })
 }

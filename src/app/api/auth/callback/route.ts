@@ -1,8 +1,9 @@
 // app/api/auth/callback/route.ts
 import { google } from 'googleapis'
-import { OAuth2Client, type TokenPayload } from 'google-auth-library'
+import { OAuth2Client } from 'google-auth-library'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { setSession } from '@/lib/session'
 
 export const runtime = 'nodejs'
 
@@ -10,23 +11,12 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!
 const DOMAIN = process.env.ALLOWED_EMAIL_DOMAIN || 'student.itera.ac.id'
-const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || 'user_session'
-const SESSION_MAX_AGE_DAYS = Number(process.env.SESSION_MAX_AGE_DAYS || 7)
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
   `${APP_URL}/api/auth/callback`
 )
-
-type SessionPayload = {
-  sub: string
-  email: string
-  nim: string | null
-  name: string | null
-  picture: string | null
-  iat: number
-}
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
@@ -66,10 +56,9 @@ export async function GET(request: NextRequest) {
       const res = NextResponse.json({ error: 'No ID token' }, { status: 400 }); cleanup(res); return res
     }
 
-    // verify ID token (audience & issuer)
     const verifier = new OAuth2Client(CLIENT_ID)
     const ticket = await verifier.verifyIdToken({ idToken: tokens.id_token, audience: CLIENT_ID })
-    const payload: TokenPayload | undefined = ticket.getPayload()
+    const payload = ticket.getPayload()
 
     if (!payload || typeof payload.email !== 'string' || typeof payload.sub !== 'string') {
       const res = NextResponse.json({ error: 'Invalid ID token payload' }, { status: 400 }); cleanup(res); return res
@@ -80,30 +69,21 @@ export async function GET(request: NextRequest) {
       const res = NextResponse.json({ error: `Email harus @${DOMAIN}` }, { status: 403 }); cleanup(res); return res
     }
 
-    // Try derive NIM from email: name.#########@student.itera.ac.id
     const nimMatch = email.match(/\.(\d{9})@student\.itera\.ac\.id$/)
-    const nim: string | null = nimMatch ? nimMatch[1] : null
+    const nim = nimMatch ? nimMatch[1] : null
 
-    const sessionValue: SessionPayload = {
+    const sessionValue = {
       sub: payload.sub,
       email,
       nim,
-      name: (typeof payload.name === 'string' ? payload.name : null) ?? null,
-      picture: (typeof payload.picture === 'string' ? payload.picture : null) ?? null,
+      name: typeof payload.name === 'string' ? payload.name : null,
+      picture: typeof payload.picture === 'string' ? payload.picture : null,
       iat: Math.floor(Date.now() / 1000),
     }
 
+    await setSession(sessionValue)
+
     const res = NextResponse.redirect(new URL('/absen', APP_URL))
-    res.cookies.set({
-      name: SESSION_COOKIE_NAME,
-      value: JSON.stringify(sessionValue),
-      httpOnly: true,
-      sameSite: 'lax',
-      // Use secure only in prod to allow localhost testing
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: SESSION_MAX_AGE_DAYS * 24 * 60 * 60,
-    })
     cleanup(res)
     return res
   } catch (err: unknown) {
