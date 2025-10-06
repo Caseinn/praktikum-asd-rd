@@ -1,5 +1,4 @@
 'use client'
-
 import * as React from 'react'
 import {
   CheckCircle2,
@@ -23,6 +22,7 @@ const WINDOW = { start: { h: 15, m: 50 }, end: { h: 17, m: 30 } }
 /** ===================================== */
 
 function toRad(d: number) { return d * Math.PI / 180 }
+
 function haversine(a: { lat: number, lng: number }, b: { lat: number, lng: number }) {
   const R = 6371000
   const dLat = toRad(b.lat - a.lat)
@@ -32,9 +32,11 @@ function haversine(a: { lat: number, lng: number }, b: { lat: number, lng: numbe
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2
   return 2 * R * Math.asin(Math.sqrt(x))
 }
+
 function fmtMeters(m: number) {
   return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(2)} km`
 }
+
 function wibNow(): Date {
   const fmt = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Jakarta',
@@ -46,6 +48,7 @@ function wibNow(): Date {
   const g = (t: string) => Number(p.find(x => x.type === t)?.value || 0)
   return new Date(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second'))
 }
+
 function isWithinWindowWIB(now = wibNow()) {
   const isThu = now.getDay() === 4
   const cur = now.getHours() * 60 + now.getMinutes()
@@ -53,6 +56,7 @@ function isWithinWindowWIB(now = wibNow()) {
   const end = WINDOW.end.h * 60 + WINDOW.end.m
   return isThu && cur >= start && cur <= end
 }
+
 function wibClockString(d = wibNow()) {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} WIB`
@@ -76,13 +80,12 @@ export default function AbsenForm() {
   const [msg, setMsg] = React.useState<string | null>(null)
   const [statusColor, setStatusColor] = React.useState<StatusColor>(null)
   const [loading, setLoading] = React.useState(false)
-
   const [nowStr, setNowStr] = React.useState(wibClockString())
   const [inWindow, setInWindow] = React.useState(isWithinWindowWIB())
-
   const [coords, setCoords] = React.useState<{ lat: number, lng: number } | null>(null)
   const [distance, setDistance] = React.useState<number | null>(null)
   const [geoAsking, setGeoAsking] = React.useState(false)
+  const [loginLoading, setLoginLoading] = React.useState(false) // ← NEW
 
   /** Check session on load */
   React.useEffect(() => {
@@ -108,19 +111,19 @@ export default function AbsenForm() {
     return () => clearInterval(t)
   }, [])
 
+  // ← UPDATED handleGoogleLogin
   const handleGoogleLogin = async () => {
+    if (loginLoading || !inWindow) return
+    setLoginLoading(true)
     try {
       const res = await fetch('/api/auth/login')
-      if (!res.ok) {
-        setMsg('Gagal memulai login Google')
-        setStatusColor('red')
-        return
-      }
+      if (!res.ok) throw new Error()
       const data = await res.json()
       window.location.href = data.url
     } catch {
       setMsg('Gagal memulai login Google')
       setStatusColor('red')
+      setLoginLoading(false)
     }
   }
 
@@ -142,45 +145,40 @@ export default function AbsenForm() {
     setGeoAsking(false)
   }
 
-async function onSubmit(e: React.FormEvent) {
-  e.preventDefault()
-  if (!user) return
-
-  setMsg(null)
-  setStatusColor(null)
-  setLoading(true)
-
-  try {
-    const c = coords ?? await getCoords()
-    const res = await fetch("/api/absen", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email, coords: c }),
-    })
-    const data = await res.json()
-
-    const pesan = data?.msg || (data?.ok ? "Absen berhasil." : "Gagal mencatat absen.")
-    setMsg(pesan)
-
-    if (!data?.ok) {
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user) return
+    setMsg(null)
+    setStatusColor(null)
+    setLoading(true)
+    try {
+      const c = coords ?? await getCoords()
+      const res = await fetch("/api/absen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, coords: c }),
+      })
+      const data = await res.json()
+      const pesan = data?.msg || (data?.ok ? "Absen berhasil." : "Gagal mencatat absen.")
+      setMsg(pesan)
+      if (!data?.ok) {
+        setStatusColor("red")
+      } else if (data.already) {
+        setStatusColor("yellow")
+      } else {
+        setStatusColor("green")
+      }
+      if (data?.ok && c) {
+        setCoords(c)
+        setDistance(haversine(c, CAMPUS))
+      }
+    } catch {
+      setMsg("Tidak bisa terhubung ke server. Coba lagi.")
       setStatusColor("red")
-    } else if (data.already) { // ← CHECK THE BOOLEAN FLAG
-      setStatusColor("yellow")
-    } else {
-      setStatusColor("green")
+    } finally {
+      setLoading(false)
     }
-
-    if (data?.ok && c) {
-      setCoords(c)
-      setDistance(haversine(c, CAMPUS))
-    }
-  } catch {
-    setMsg("Tidak bisa terhubung ke server. Coba lagi.")
-    setStatusColor("red")
-  } finally {
-    setLoading(false)
   }
-}
 
   const StatusIcon = statusColor === 'green'
     ? CheckCircle2
@@ -239,9 +237,20 @@ async function onSubmit(e: React.FormEvent) {
 
           {/* Auth */}
           {!user ? (
-            <Button onClick={handleGoogleLogin} className="w-full gap-1.5 py-2" aria-label="Login dengan Google" disabled={!inWindow}>
-              <LogIn className="size-3.5" />
-              <span className="text-sm">Login dengan Google</span>
+            <Button
+              onClick={handleGoogleLogin}
+              className="w-full gap-1.5 py-2"
+              aria-label="Login dengan Google"
+              disabled={!inWindow || loginLoading} // ← now includes loginLoading
+            >
+              {loginLoading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <LogIn className="size-3.5" />
+              )}
+              <span className="text-sm">
+                {loginLoading ? 'Mengarahkan...' : 'Login dengan Google'}
+              </span>
             </Button>
           ) : (
             <div className="rounded-md border bg-muted/30 p-2.5 text-xs">
