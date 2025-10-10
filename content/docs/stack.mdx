@@ -1,0 +1,329 @@
+---
+title: Stack
+description: Memahami struktur data Stack dengan implementasi menggunakan array dalam pemrograman
+---
+
+**Stack** adalah struktur data linear yang mengikuti prinsip Last-In-First-Out (LIFO), dimana elemen terakhir yang dimasukkan akan menjadi elemen pertama yang dikeluarkan.  
+**TOP** adalah penunjuk ke elemen puncak stack dimana semua operasi penyisipan dan penghapusan dilakukan.
+
+Stack merupakan abstraksi dari tumpukan secara vertikal pada objek fisik, seperti tumpukan piring atau tumpukan buku.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep Stack** sebagai struktur data linear dengan prinsip LIFO.
+- **Mengimplementasikan Stack** menggunakan array dengan operasi dasar yang tepat.
+- **Menerapkan operasi Push dan Pop** dengan benar sesuai definisi fungsional.
+- **Menggunakan Stack** untuk menyelesaikan masalah pemrograman yang memerlukan penyimpanan data LIFO.
+
+---
+
+    ## Mengapa Stack Penting?
+
+Stack adalah struktur data fundamental yang digunakan dalam berbagai aplikasi komputer:
+
+1. **Function Call Stack**  
+   Sistem operasi menggunakan stack untuk mengelola pemanggilan fungsi dalam program. Setiap kali fungsi dipanggil, informasi return address dan parameter disimpan di stack.
+
+2. **Undo/Redo Mechanism**  
+   Aplikasi seperti text editor dan photo editor menggunakan stack untuk menyimpan history operasi, memungkinkan pembatalan (undo) dan pengulangan (redo) aksi pengguna.
+
+3. **Browser History**  
+   Tombol "Back" pada browser menggunakan konsep stack untuk menyimpan halaman yang telah dikunjungi.
+
+---
+
+## Konsep Dasar Stack
+
+### Definisi dan Karakteristik
+
+Stack merupakan list linear dengan karakteristik khusus:
+
+- **TOP**: Elemen puncak dimana semua operasi dilakukan
+- **BOTTOM**: Elemen paling bawah (tidak berubah kecuali stack dikosongkan)
+- **LIFO (Last-In-First-Out)**: Elemen terakhir yang masuk akan keluar pertama
+- **Operasi terbatas**: Hanya dapat menambah dan menghapus di satu ujung (TOP)
+- **Akses terbatas**: Hanya elemen TOP yang dapat diakses langsung
+
+### Visualisasi Stack
+
+```
+Stack dengan operasi Push dan Pop:
+
+      Push 5
+        ↓
+      ┌─────┐
+      │  5  │← TOP (Pop)
+      ├─────┤
+      │  3  │
+      ├─────┤
+      │  7  │
+      ├─────┤
+      │  2  │ BOTTOM
+      └─────┘
+
+Setelah Pop:
+      ┌─────┐
+      │  3  │← TOP (elemen baru)
+      ├─────┤
+      │  7  │
+      ├─────┤
+      │  2  │ BOTTOM
+      └─────┘
+```
+
+### Prinsip LIFO
+
+Bayangkan tumpukan piring:
+- Piring terakhir yang ditaruh di atas akan diambil pertama
+- Piring paling bawah akan diambil terakhir
+- Tidak bisa mengambil piring di tengah tanpa mengambil yang di atasnya
+
+---
+
+## Struktur Stack dan Definisi
+
+### Definisi Struktur Stack
+
+```cpp
+#define Nil 0
+#define MaxEl 10
+
+typedef int infotype, address;
+typedef struct {
+    infotype Data[MaxEl + 1];
+    address TOP;
+} stack;
+
+#define TOP(S) (S).TOP
+#define InfoTop(S) (S).Data[(S).TOP]
+```
+
+---
+
+## Operasi Dasar Stack
+
+### 1. Operasi CreateEmpty
+
+```cpp
+void CreateEmpty(stack *S) {
+    TOP(*S) = Nil;
+}
+```
+
+Fungsi ini menginisialisasi stack kosong dengan mengatur TOP ke Nil (0).
+
+### 2. Operasi IsEmpty
+
+```cpp
+bool IsEmpty(stack S) {
+    return (TOP(S) == Nil);
+}
+```
+
+Mengembalikan `true` jika TOP bernilai Nil, artinya stack kosong.
+
+
+### 3. Operasi IsFull
+
+```cpp
+bool IsFull(stack S) {
+    return (TOP(S) == MaxEl);
+}
+```
+
+Mengembalikan `true` jika TOP sudah mencapai kapasitas maksimum.
+
+
+### 4. Operasi Push
+
+```cpp
+void Push(stack *S, infotype x) {
+    if (!IsFull(*S)) {
+        TOP(*S)++;              // Naikkan TOP
+        InfoTop(*S) = x;        // Simpan nilai x di TOP
+    } else {
+        cout << "Stack Penuh" << endl;
+    }
+}
+```
+
+**Langkah Push:**
+1. Cek apakah stack penuh
+2. Jika tidak penuh: naikkan TOP, lalu simpan nilai
+3. Jika penuh: tampilkan pesan error
+
+
+### 5. Operasi Pop
+
+```cpp
+void Pop(stack *S, infotype *x) {
+    if (!IsEmpty(*S)) {
+        *x = InfoTop(*S);       // Ambil nilai TOP
+        TOP(*S)--;              // Turunkan TOP
+    } else {
+        cout << "Stack Kosong" << endl;
+    }
+}
+```
+
+**Langkah Pop:**
+1. Cek apakah stack kosong
+2. Jika tidak kosong: ambil nilai TOP, lalu turunkan TOP
+3. Jika kosong: tampilkan pesan error
+
+---
+
+## Contoh Program Lengkap
+
+```cpp
+#include <iostream>
+using namespace std;
+
+#define Nil 0
+#define MaxEl 10
+
+typedef int infotype, address;
+typedef struct {
+    infotype Data[MaxEl + 1];
+    address TOP;
+} stack;
+
+#define TOP(S) (S).TOP
+#define InfoTop(S) (S).Data[(S).TOP]
+
+void CreateEmpty(stack *S) {
+    TOP(*S) = Nil;
+}
+
+bool IsEmpty(stack S) {
+    return (TOP(S) == Nil);
+}
+
+bool IsFull(stack S) {
+    return (TOP(S) == MaxEl);
+}
+
+void Push(stack *S, infotype x) {
+    if (!IsFull(*S)) {
+        TOP(*S)++;
+        InfoTop(*S) = x;
+    } else {
+        cout << "Stack Penuh" << endl;
+    }
+}
+
+void Pop(stack *S, infotype *x) {
+    if (!IsEmpty(*S)) {
+        *x = InfoTop(*S);
+        TOP(*S)--;
+    } else {
+        cout << "Stack Kosong" << endl;
+    }
+}
+
+int main() {
+    stack DataTest;
+    infotype DataHapus;
+    
+    // Inisialisasi stack kosong
+    CreateEmpty(&DataTest);
+    
+    // Menambahkan elemen
+    cout << "Push(3)" << endl;
+    Push(&DataTest, 3);
+    
+    cout << "Push(7)" << endl;
+    Push(&DataTest, 7);
+    
+    cout << "Push(5)" << endl;
+    Push(&DataTest, 5);
+    
+    cout << "Push(9)" << endl;
+    Push(&DataTest, 9);
+    
+    // Menghapus satu elemen
+    Pop(&DataTest, &DataHapus);
+    cout << "\nPop(" << DataHapus << ")" << endl ;
+    
+    // Menampilkan semua isi stack
+    cout << "\nIsi Stack (LIFO):" << endl;
+    while (!IsEmpty(DataTest)) {
+        Pop(&DataTest, &DataHapus);
+        cout << DataHapus << endl;
+    }
+    
+    return 0;
+}
+```
+
+**Output Program:**
+```
+Push(3)
+Push(7)
+Push(5)
+Push(9)
+
+Pop(9)
+
+Isi Stack (LIFO):
+5
+7
+3
+```
+
+---
+
+## Latihan
+
+### Latihan 1: Membalik String
+**Objektif**: Menggunakan stack untuk membalik urutan karakter dalam string.
+
+**Spesifikasi:**
+- Input: String dari user (contoh: "HELLO")
+- Proses: Push setiap karakter ke stack, lalu Pop semua
+- Output: String terbalik (contoh: "OLLEH")
+
+---
+
+### Latihan 2: Konversi Desimal ke Biner
+**Objektif**: Menggunakan stack untuk konversi bilangan desimal ke biner.
+
+**Spesifikasi:**
+- Input: Bilangan desimal (contoh: 13)
+- Proses: 
+  - Bagi bilangan dengan 2, Push sisa bagi ke stack
+  - Ulangi hingga bilangan = 0
+  - Pop semua untuk mendapat biner
+- Output: Bilangan biner (contoh: 1101)
+
+**Algoritma:**
+```
+13 ÷ 2 = 6 sisa 1 → Push(1)
+6 ÷ 2 = 3 sisa 0 → Push(0)
+3 ÷ 2 = 1 sisa 1 → Push(1)
+1 ÷ 2 = 0 sisa 1 → Push(1)
+
+Pop semua: 1101
+```
+
+---
+
+## Implementasi Stack dengan List
+
+Selain array, Stack dapat diimplementasikan menggunakan linked list:
+
+### Karakteristik Stack dengan List
+
+- **Push**: Gunakan operasi `InsertFirst` (tambah di depan list)
+- **Pop**: Gunakan operasi `DeleteFirst` (hapus dari depan list)
+- **TOP**: Selalu elemen pertama dalam linked list
+
+---
+
+*Materi - Stack Dan Queue dengan Array*  
+
+---
