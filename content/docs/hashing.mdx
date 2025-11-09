@@ -1,0 +1,868 @@
+---
+title: Hashing
+description: Memahami konsep Hashing dan Hash Table untuk pencarian data dengan kompleksitas O(1) menggunakan fungsi hash dan penanganan collision
+---
+
+**Hashing** adalah teknik untuk memetakan data ke dalam lokasi atau alamat tertentu menggunakan fungsi hash, sehingga operasi pencarian dapat dilakukan dengan kompleksitas waktu O(1).  
+**Hash Table** adalah struktur data yang menyimpan data berdasarkan alamat hash yang dihasilkan dari fungsi hash.
+
+Hashing merupakan solusi untuk pencarian data yang lebih cepat dari binary search, dimana kompleksitas tidak bergantung pada jumlah data.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep Hashing** dan bagaimana fungsi hash memetakan data ke alamat.
+- **Mengimplementasikan berbagai fungsi hash** seperti modulus, pemotongan, dan pelipatan.
+- **Menangani collision (tabrakan)** dengan metode pengalamatan terbuka dan pembentukan rantai.
+- **Mengimplementasikan Hash Table** menggunakan array dan linked list dalam C++.
+- **Melakukan operasi** insert, delete, dan search pada Hash Table.
+
+---
+
+## Mengapa Hashing Penting?
+
+Hashing adalah teknik fundamental yang digunakan dalam berbagai aplikasi komputer:
+
+1. **Database Indexing**  
+   Database menggunakan hashing untuk indexing dan pencarian data yang sangat cepat, terutama untuk primary key lookup.
+
+2. **Cache Implementation**  
+   Browser dan sistem operasi menggunakan hash table untuk menyimpan cache, memungkinkan akses data yang cepat.
+
+3. **Cryptography**  
+   Fungsi hash kriptografis digunakan untuk password storage, digital signatures, dan verifikasi integritas data.
+
+4. **Compiler Symbol Table**  
+   Compiler menggunakan hash table untuk menyimpan informasi tentang variabel, fungsi, dan identifier lainnya.
+
+---
+
+## Latar Belakang
+
+### Perbandingan Kompleksitas Pencarian
+
+| Metode Pencarian | Kompleksitas | Keterangan |
+|-----------------|--------------|------------|
+| **Linear Search** | O(n) | Cek satu per satu |
+| **Binary Search** | O(log n) | Perlu data terurut |
+| **Hashing** | O(1) | Akses langsung via alamat |
+
+### Konsep Dasar Hashing
+
+Ide utama hashing adalah **menterjemahkan data menjadi lokasi atau alamat** secara langsung:
+
+```
+Data → Fungsi Hash → Alamat Hash → Lokasi di Memory
+```
+
+**Contoh Sederhana:**
+```
+Data: 7783
+Fungsi Hash: X mod 10
+Alamat Hash: 7783 mod 10 = 3
+
+Array Index:  0  1  2  3  4  5  6  7  8  9
+                        ↑
+                     7783 disimpan di index 3
+```
+
+---
+
+## Fungsi Hash
+
+### Definisi Fungsi Hash
+
+**Fungsi hash** adalah fungsi yang memetakan suatu nilai kunci (key) menjadi suatu nilai yang dinamakan **alamat hash**.
+
+**Karakteristik Fungsi Hash yang Baik:**
+
+1. **Cepat dan Mudah**: Komputasi tidak boleh terlalu kompleks
+2. **Sebaran Merata**: Menghasilkan distribusi data yang merata di seluruh jangkauan indeks
+3. **Deterministik**: Input yang sama selalu menghasilkan output yang sama
+4. **Minimal Collision**: Meminimalkan kemungkinan dua data berbeda menghasilkan alamat yang sama
+
+---
+
+## Jenis-Jenis Fungsi Hash
+
+### 1. Fungsi Hash Modulus
+
+```cpp
+H(k) = k mod m
+```
+
+Dimana:
+- `k` adalah kunci (key/data)
+- `m` adalah bilangan pembagi (ukuran tabel hash)
+- `m > n` (m lebih besar dari jumlah data n)
+
+**Karakteristik:**
+- Paling sederhana dan paling umum digunakan
+- Disarankan `m` adalah bilangan prima untuk distribusi yang lebih merata
+- Hindari `m` yang merupakan kelipatan 2 atau 10
+
+**Contoh:**
+
+```
+Fungsi Hash: H(k) = k mod 10
+
+NIP     | Perhitungan      | Alamat Hash
+--------|------------------|-------------
+55520   | 55520 mod 10     | 0
+55521   | 55521 mod 10     | 1
+55522   | 55522 mod 10     | 2
+55528   | 55528 mod 10     | 8
+55562   | 55562 mod 10     | 2 (COLLISION!)
+```
+
+### 2. Fungsi Hash Pemotongan (Truncation)
+
+Metode ini mengambil bagian tertentu dari data sebagai alamat hash dan mengabaikan bagian lainnya.
+
+**Contoh:**
+
+```
+Tabel Hash: 1000 alamat (000 - 999)
+Data: 8 digit
+Ambil: digit ke-2, ke-5, dan ke-7
+
+NIP: 1 9 8 7 0 6 2 5
+     ↓   ↓     ↓
+     9   0     2  → Alamat: 902
+```
+
+### 3. Fungsi Hash Pelipatan (Folding)
+
+Kunci dibagi menjadi beberapa bagian, kemudian dijumlahkan. Hasil penjumlahan diambil bagian tertentu sebagai alamat.
+
+**Algoritma:**
+1. Potong data setiap n digit (misal: setiap 2 digit)
+2. Jumlahkan semua potongan: H() = k1 + k2 + k3 + ...
+3. Ambil n digit terakhir sebagai alamat hash
+
+**Contoh:**
+
+```
+Data: 55528
+
+Langkah 1: Potong tiap 2 digit
+  k1 = 55
+  k2 = 52
+  k3 = 28
+
+Langkah 2: Jumlahkan
+  H() = 55 + 52 + 28 = 135
+
+Langkah 3: Ambil 2 digit terakhir
+  Alamat Hash = 35
+```
+
+---
+
+## Menangani Collision (Tabrakan)
+
+### Apa itu Collision?
+
+**Collision** terjadi ketika dua data berbeda menghasilkan alamat hash yang sama.
+
+```
+Data 1: 452 → 452 mod 10 = 2
+Data 2: 672 → 672 mod 10 = 2  ← COLLISION!
+```
+
+**Mengapa Collision Terjadi?**
+- Jumlah data > jumlah alamat yang tersedia
+- Fungsi hash tidak sempurna dalam mendistribusikan data
+
+### Metode Penanganan Collision
+
+Ada dua metode utama untuk menangani collision:
+
+1. **Open Addressing (Pengalamatan Terbuka)**
+2. **Chaining (Pembentukan Rantai)**
+
+---
+
+## 1. Open Addressing (Pengalamatan Terbuka)
+
+### Konsep
+
+Semua data disimpan di dalam tabel hash itu sendiri. Jika terjadi collision, cari alamat terdekat yang masih kosong.
+
+**Kelebihan:**
+- Tidak memerlukan struktur data tambahan
+- Memory efficient (hanya array)
+
+**Kekurangan:**
+- Jumlah data ≤ jumlah alamat yang tersedia
+- Clustering (pengelompokan data)
+
+### Linear Probing
+
+Mencari slot kosong dengan memeriksa slot berikutnya secara berurutan.
+
+**Algoritma:**
+```
+1. Hitung alamat hash: h = H(key)
+2. Jika slot[h] kosong → simpan di sini
+3. Jika slot[h] penuh → coba slot[(h + 1) mod m]
+4. Ulangi sampai menemukan slot kosong
+```
+
+**Contoh:**
+
+```
+Tabel Hash (size 10):
+
+Index | Data
+------|------
+0     | 55520
+1     | (empty)
+2     | 55522
+3     | 55523
+4     | (empty)
+5     | (empty)
+6     | 55526
+7     | 55527
+8     | (empty)
+9     | (empty)
+
+Insert 55562:
+- 55562 mod 10 = 2 (sudah terisi 55522)
+- Coba index 3 (sudah terisi 55523)
+- Coba index 4 (kosong!) → Simpan di index 4
+```
+
+**Implementasi:**
+```cpp
+void insertLinearProbing(int hashTable[], int size, int key) {
+    int index = key % size;
+    int originalIndex = index;
+    
+    // Cari slot kosong
+    while (hashTable[index] != -1) {  // -1 = empty
+        index = (index + 1) % size;
+        
+        // Tabel penuh
+        if (index == originalIndex) {
+            cout << "Hash Table penuh!" << endl;
+            return;
+        }
+    }
+    
+    hashTable[index] = key;
+}
+```
+
+### Quadratic Probing
+
+Mencari slot kosong dengan interval kuadratik: h, h+1², h+2², h+3², ...
+
+**Algoritma:**
+```
+1. Hitung alamat hash: h = H(key)
+2. Coba: h, h+1, h+4, h+9, h+16, ... (mod m)
+```
+
+**Implementasi:**
+```cpp
+void insertQuadraticProbing(int hashTable[], int size, int key) {
+    int index = key % size;
+    int i = 0;
+    
+    while (hashTable[index] != -1) {
+        i++;
+        index = (key % size + i * i) % size;
+        
+        if (i >= size) {
+            cout << "Hash Table penuh!" << endl;
+            return;
+        }
+    }
+    
+    hashTable[index] = key;
+}
+```
+
+### Double Hashing
+
+Menggunakan fungsi hash kedua untuk menentukan interval probing.
+
+**Algoritma:**
+```
+h1(key) = key mod m
+h2(key) = 1 + (key mod (m-1))
+
+index = (h1(key) + i * h2(key)) mod m
+```
+
+---
+
+## 2. Chaining (Pembentukan Rantai)
+
+### Konsep
+
+Setiap slot di hash table berisi pointer ke linked list. Data dengan alamat hash yang sama dirantai dalam linked list.
+
+**Kelebihan:**
+- Dapat menampung data lebih banyak dari ukuran tabel
+- Tidak ada masalah clustering
+- Delete operation lebih mudah
+
+**Kekurangan:**
+- Memerlukan memory tambahan untuk pointer
+- Cache performance lebih rendah
+
+### Visualisasi
+
+```
+Hash Table Array:
+
+Index | First Pointer
+------|--------------
+0     | → [55520|Ani|•] → NULL
+1     | → NULL
+2     | → [55522|Budi|•] → NULL
+3     | → [55523|Susi|•] → [55573|Anton|•] → NULL
+4     | → NULL
+5     | → NULL
+6     | → [55526|Anwar|•] → NULL
+7     | → [55527|Dika|•] → NULL
+8     | → NULL
+9     | → NULL
+```
+
+---
+
+## Implementasi Hash Table dengan Chaining
+
+### Struktur Data
+
+```cpp
+#define Nil NULL
+#define MaxEl 10
+
+typedef int infotype;
+typedef struct tNode *addrNode;
+typedef struct tNode {
+    infotype info;
+    addrNode next;
+} Node;
+
+typedef struct tHash *addrHash;
+typedef struct tHash {
+    addrNode first;
+} Hash;
+```
+
+### Selektor
+
+```cpp
+#define Info(P) (P)->info
+#define Next(P) (P)->next
+#define First(H,i) (H)[i].first
+```
+
+**Penjelasan:**
+- `H` adalah hash table (array of Hash)
+- `i` adalah index dalam hash table
+- `First(H,i)` mengakses pointer first dari elemen ke-i
+
+---
+
+## Operasi Dasar Hash Table
+
+### 1. CreateEmptyHash
+
+```cpp
+void CreateEmptyHash(addrHash hash_table) {
+    for (int i = 0; i < MaxEl; i++) {
+        First(hash_table, i) = Nil;
+    }
+}
+```
+
+Menginisialisasi semua slot hash table dengan Nil (kosong).
+
+### 2. NodeAllocation
+
+```cpp
+addrNode NodeAllocation(infotype X) {
+    addrNode NewNode = (addrNode)malloc(sizeof(Node));
+    if (NewNode != Nil) {
+        Info(NewNode) = X;
+        Next(NewNode) = Nil;
+    }
+    return NewNode;
+}
+```
+
+Mengalokasikan memory untuk node baru dengan nilai X.
+
+### 3. NodeDeallocation
+
+```cpp
+void NodeDeallocation(addrNode hapus) {
+    free(hapus);
+}
+```
+
+Membebaskan memory yang dialokasikan untuk node.
+
+### 4. IsEmptyFirst
+
+```cpp
+bool IsEmptyFirst(addrNode First) {
+    return (First == Nil);
+}
+```
+
+Mengecek apakah linked list di suatu index kosong.
+
+---
+
+## Operasi pada Linked List (Helper Functions)
+
+### 1. InsertFirst
+
+```cpp
+void InsertFirst(addrNode *First, infotype X) {
+    addrNode NewNode = NodeAllocation(X);
+    Next(NewNode) = *First;
+    *First = NewNode;
+}
+```
+
+Menambahkan node baru di awal linked list.
+
+### 2. InsertLast
+
+```cpp
+void InsertLast(addrNode *First, infotype X) {
+    addrNode NewNode = NodeAllocation(X);
+    addrNode temp = *First;
+    
+    while (Next(temp) != Nil) {
+        temp = Next(temp);
+    }
+    Next(temp) = NewNode;
+}
+```
+
+Menambahkan node baru di akhir linked list.
+
+### 3. DeleteFirst
+
+```cpp
+void DeleteFirst(addrNode *First) {
+    addrNode temp = *First;
+    *First = Next(*First);
+    Next(temp) = Nil;
+    NodeDeallocation(temp);
+}
+```
+
+Menghapus node pertama dari linked list.
+
+### 4. DeleteAfter
+
+```cpp
+void DeleteAfter(addrNode *pred) {
+    addrNode temp = Next(*pred);
+    Next(*pred) = Next(temp);
+    NodeDeallocation(temp);
+}
+```
+
+Menghapus node setelah node predecessor.
+
+### 5. DeleteLast
+
+```cpp
+void DeleteLast(addrNode *First) {
+    addrNode temp = *First;
+    addrNode predTemp = Nil;
+    
+    while (Next(temp) != Nil) {
+        predTemp = temp;
+        temp = Next(temp);
+    }
+    
+    DeleteAfter(&predTemp);
+}
+```
+
+Menghapus node terakhir dari linked list.
+
+---
+
+## Operasi Hash Table dengan Chaining
+
+### 1. InsertValue
+
+```cpp
+void InsertValue(addrHash hash_table, infotype X) {
+    int index = X % MaxEl;
+    addrNode *First = &(First(hash_table, index));
+    
+    if (IsEmptyFirst(*First)) {
+        InsertFirst(First, X);
+    } else {
+        InsertLast(First, X);
+    }
+}
+```
+
+**Langkah-langkah:**
+1. Hitung index dengan fungsi hash (modulus)
+2. Dapatkan pointer ke first node di index tersebut
+3. Jika list kosong, insert di awal
+4. Jika list tidak kosong, insert di akhir
+
+### 2. DeleteValue
+
+```cpp
+void DeleteValue(addrHash hash_table, infotype X) {
+    int index = X % MaxEl;
+    addrNode *First = &(First(hash_table, index));
+    
+    if (IsEmptyFirst(*First)) {
+        cout << "Alamat menunjuk Nil." << endl;
+    } else {
+        // Data ada di posisi awal
+        if (Info(*First) == X) {
+            DeleteFirst(First);
+        } else {
+            // Data tidak di depan, cari di list
+            addrNode temp = *First;
+            addrNode pred = Nil;
+            
+            while (temp != Nil && Info(temp) != X) {
+                pred = temp;
+                temp = Next(temp);
+            }
+            
+            // Data tidak ditemukan
+            if (temp == Nil) {
+                cout << "Pada index ke-" << index 
+                     << " tidak ditemukan data " << X << "." << endl;
+            } else {
+                // Data ditemukan
+                if (Next(temp) == Nil) {
+                    // Node ada di posisi akhir
+                    DeleteLast(First);
+                } else {
+                    // Node ada di posisi tengah
+                    DeleteAfter(&pred);
+                }
+            }
+        }
+    }
+}
+```
+
+**Langkah-langkah:**
+1. Hitung index dengan fungsi hash
+2. Cek apakah list di index tersebut kosong
+3. Jika data di awal, gunakan DeleteFirst
+4. Jika tidak, cari data dalam list
+5. Hapus sesuai posisi (tengah/akhir)
+
+### 3. GetValue (Search)
+
+```cpp
+void GetValue(addrHash hash_table, infotype X) {
+    int index = X % MaxEl;
+    addrNode First = First(hash_table, index);
+    bool ketemu = false;
+    
+    if (IsEmptyFirst(First)) {
+        cout << "Alamat menunjuk Nil, data tidak ditemukan." << endl;
+    } else {
+        addrNode temp = First;
+        
+        while (temp != Nil) {
+            if (Info(temp) == X) {
+                ketemu = true;
+                break;
+            }
+            temp = Next(temp);
+        }
+        
+        if (ketemu) {
+            cout << "Data ditemukan." << endl;
+        } else {
+            cout << "Data tidak ditemukan." << endl;
+        }
+    }
+}
+```
+
+**Langkah-langkah:**
+1. Hitung index dengan fungsi hash
+2. Traverse linked list di index tersebut
+3. Bandingkan setiap node dengan nilai yang dicari
+4. Return true jika ketemu, false jika tidak
+
+---
+
+## Contoh Program Lengkap
+
+```cpp
+#include <iostream>
+#include <cstdlib>
+using namespace std;
+
+#define Nil NULL
+#define MaxEl 10
+
+typedef int infotype;
+typedef struct tNode *addrNode;
+typedef struct tNode {
+    infotype info;
+    addrNode next;
+} Node;
+
+typedef struct tHash *addrHash;
+typedef struct tHash {
+    addrNode first;
+} Hash;
+
+#define Info(P) (P)->info
+#define Next(P) (P)->next
+#define First(H,i) (H)[i].first
+
+// Fungsi Dasar
+void CreateEmptyHash(addrHash hash_table) {
+    for (int i = 0; i < MaxEl; i++) {
+        First(hash_table, i) = Nil;
+    }
+}
+
+addrNode NodeAllocation(infotype X) {
+    addrNode NewNode = (addrNode)malloc(sizeof(Node));
+    if (NewNode != Nil) {
+        Info(NewNode) = X;
+        Next(NewNode) = Nil;
+    }
+    return NewNode;
+}
+
+void NodeDeallocation(addrNode hapus) {
+    free(hapus);
+}
+
+bool IsEmptyFirst(addrNode First) {
+    return (First == Nil);
+}
+
+// Operasi Linked List
+void InsertFirst(addrNode *First, infotype X) {
+    addrNode NewNode = NodeAllocation(X);
+    Next(NewNode) = *First;
+    *First = NewNode;
+}
+
+void InsertLast(addrNode *First, infotype X) {
+    addrNode NewNode = NodeAllocation(X);
+    
+    if (*First == Nil) {
+        *First = NewNode;
+    } else {
+        addrNode temp = *First;
+        while (Next(temp) != Nil) {
+            temp = Next(temp);
+        }
+        Next(temp) = NewNode;
+    }
+}
+
+void DeleteFirst(addrNode *First) {
+    if (*First != Nil) {
+        addrNode temp = *First;
+        *First = Next(*First);
+        NodeDeallocation(temp);
+    }
+}
+
+// Operasi Hash Table
+void InsertValue(addrHash hash_table, infotype X) {
+    int index = X % MaxEl;
+    addrNode *First = &(First(hash_table, index));
+    
+    if (IsEmptyFirst(*First)) {
+        InsertFirst(First, X);
+    } else {
+        InsertLast(First, X);
+    }
+    
+    cout << "Insert " << X << " di index " << index << endl;
+}
+
+bool SearchValue(addrHash hash_table, infotype X) {
+    int index = X % MaxEl;
+    addrNode First = First(hash_table, index);
+    
+    if (IsEmptyFirst(First)) {
+        return false;
+    }
+    
+    addrNode temp = First;
+    while (temp != Nil) {
+        if (Info(temp) == X) {
+            return true;
+        }
+        temp = Next(temp);
+    }
+    
+    return false;
+}
+
+void PrintHashTable(addrHash hash_table) {
+    cout << "\n=== ISI HASH TABLE ===" << endl;
+    for (int i = 0; i < MaxEl; i++) {
+        cout << "Index " << i << ": ";
+        
+        addrNode temp = First(hash_table, i);
+        if (temp == Nil) {
+            cout << "NULL";
+        } else {
+            while (temp != Nil) {
+                cout << Info(temp);
+                if (Next(temp) != Nil) {
+                    cout << " -> ";
+                }
+                temp = Next(temp);
+            }
+        }
+        cout << endl;
+    }
+}
+
+int main() {
+    // Alokasi hash table
+    addrHash hashTable = (addrHash)malloc(MaxEl * sizeof(Hash));
+    CreateEmptyHash(hashTable);
+    
+    // Insert data
+    cout << "=== INSERT DATA ===" << endl;
+    InsertValue(hashTable, 55520);
+    InsertValue(hashTable, 55521);
+    InsertValue(hashTable, 55522);
+    InsertValue(hashTable, 55528);
+    InsertValue(hashTable, 55562);  // Collision dengan 55522
+    InsertValue(hashTable, 55523);
+    InsertValue(hashTable, 55573);  // Collision dengan 55523
+    
+    // Tampilkan isi hash table
+    PrintHashTable(hashTable);
+    
+    // Search data
+    cout << "\n=== SEARCH DATA ===" << endl;
+    cout << "Search 55520: " << (SearchValue(hashTable, 55520) ? "Ditemukan" : "Tidak Ditemukan") << endl;
+    cout << "Search 55562: " << (SearchValue(hashTable, 55562) ? "Ditemukan" : "Tidak Ditemukan") << endl;
+    cout << "Search 99999: " << (SearchValue(hashTable, 99999) ? "Ditemukan" : "Tidak Ditemukan") << endl;
+    
+    return 0;
+}
+```
+
+**Output Program:**
+```
+=== INSERT DATA ===
+Insert 55520 di index 0
+Insert 55521 di index 1
+Insert 55522 di index 2
+Insert 55528 di index 8
+Insert 55562 di index 2
+Insert 55523 di index 3
+Insert 55573 di index 3
+
+=== ISI HASH TABLE ===
+Index 0: 55520
+Index 1: 55521
+Index 2: 55522 -> 55562
+Index 3: 55523 -> 55573
+Index 4: NULL
+Index 5: NULL
+Index 6: NULL
+Index 7: NULL
+Index 8: 55528
+Index 9: NULL
+
+=== SEARCH DATA ===
+Search 55520: Ditemukan
+Search 55562: Ditemukan
+Search 99999: Tidak Ditemukan
+```
+
+---
+
+
+## Perbandingan Metode Collision Handling
+
+| Aspek | Open Addressing | Chaining |
+|-------|----------------|----------|
+| **Memory** | Lebih efisien (hanya array) | Butuh memory tambahan (pointer) |
+| **Kapasitas** | Terbatas (jumlah data ≤ size) | Tidak terbatas |
+| **Cache** | Lebih baik (array contiguous) | Lebih buruk (pointer jumping) |
+| **Delete** | Kompleks (perlu marking) | Mudah (hapus dari list) |
+| **Clustering** | Ada masalah clustering | Tidak ada clustering |
+| **Implementasi** | Lebih sederhana | Lebih kompleks |
+
+---
+
+## Latihan
+
+### Latihan 1: Hash Function Comparison
+**Objektif**: Membandingkan distribusi data dari berbagai fungsi hash.
+
+**Spesifikasi:**
+- Proses: Hitung alamat hash dengan 3 fungsi berbeda (modulus, truncation, folding)
+- Output: Tampilkan distribusi data dan jumlah collision
+
+{/*
+int hashModulus(int key) {
+    return (key % MaxEl + MaxEl) % MaxEl;
+}
+
+int hashTruncation(int key) {
+    // ambil digit ke-2, ke-5, ke-7 (sesuai contohmu), hasilkan 0..999 lalu map ke 0..MaxEl-1
+    int d2 = (key / 1000000) % 10;  // digit ke-2
+    int d5 = (key / 1000) % 10;     // digit ke-5
+    int d7 = (key / 10) % 10;       // digit ke-7
+    int h = d2 * 100 + d5 * 10 + d7;
+    return h % MaxEl;
+}
+
+int hashFolding(int key) {
+    // pecah per 2 digit (tanpa pow), jumlahkan, lalu mod MaxEl
+    int sum = 0;
+    while (key > 0) {
+        int part = key % 100; // 2 digit
+        sum += part;
+        key /= 100;
+    }
+    return sum % MaxEl;
+}
+*/}
+
+---
+
+### Latihan 2: Implementasi Open Addressing
+**Objektif**: Implementasi hash table dengan linear probing.
+
+**Spesifikasi:**
+- Input: Data yang akan diinsert
+- Proses: Insert menggunakan linear probing untuk handling collision
+- Output: Hash table dengan collision yang di-resolve
+
+
+---
+
+*Materi - Hashing*
+
+---
