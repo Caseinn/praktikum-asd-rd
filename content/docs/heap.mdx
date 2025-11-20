@@ -1,0 +1,992 @@
+---
+title: Heap
+description: Memahami struktur data Heap sebagai Complete Binary Tree dengan implementasi MaxHeap dan MinHeap menggunakan linked list dalam pemrograman
+---
+
+**Heap** adalah struktur data berbentuk Complete Binary Tree dengan ketentuan khusus mengenai hubungan nilai antara node parent dan child-nya. Heap digunakan sebagai **Priority Queue** di mana elemen dengan prioritas tertinggi (atau terendah) selalu berada di root dan dapat diakses dengan cepat.
+
+Heap merupakan implementasi efisien untuk antrian prioritas yang digunakan dalam berbagai algoritma seperti Heap Sort, Dijkstra's Algorithm, dan Huffman Coding.
+
+---
+
+## Tujuan Pembelajaran
+
+Setelah mempelajari materi ini, mahasiswa diharapkan mampu:
+
+- **Memahami konsep Heap** sebagai Complete Binary Tree dengan property khusus.
+- **Membedakan MaxHeap dan MinHeap** berdasarkan relasi parent-child.
+- **Mengimplementasikan Heap** menggunakan linked list dengan struktur binary tree.
+- **Menerapkan operasi dasar Heap**: Insert, Delete, dan Heapify.
+- **Menganalisis kompleksitas** operasi-operasi pada Heap.
+
+---
+
+## Mengapa Heap Penting?
+
+Heap adalah struktur data fundamental yang digunakan dalam berbagai aplikasi komputer:
+
+1. **Priority Queue**  
+   Heap menyediakan implementasi efisien untuk priority queue dengan operasi insert dan delete-max/min dalam O(log n).
+
+2. **Heap Sort**  
+   Algoritma sorting dengan kompleksitas O(n log n) yang memanfaatkan property heap untuk mengurutkan data.
+
+3. **Graph Algorithms**  
+   Digunakan dalam algoritma Dijkstra dan Prim untuk mencari shortest path dan minimum spanning tree.
+
+4. **Operating System**  
+   Scheduling process dalam OS menggunakan heap untuk mengelola prioritas task.
+
+5. **Memory Management**  
+   Dynamic memory allocation menggunakan konsep heap untuk mengelola alokasi memori.
+
+---
+
+## Review: Complete Binary Tree
+
+Sebelum memahami Heap, kita perlu memahami Complete Binary Tree terlebih dahulu.
+
+### Jenis-Jenis Binary Tree
+
+1. **Binary Tree**  
+   Tree di mana setiap node memiliki maksimum 2 anak (degree ≤ 2).
+
+2. **Full Binary Tree**  
+   Binary tree di mana setiap node memiliki degree 0 atau 2 (tidak ada node dengan 1 anak).
+
+3. **Perfect Binary Tree**  
+   Binary tree di mana setiap node memiliki degree 0 atau 2, dan semua leaf berada pada level yang sama.
+
+4. **Complete Binary Tree**  
+   Binary tree dengan tinggi k yang memiliki jumlah maksimum node di level 0 sampai k-1, dan pada level k seluruh node mampat ke kiri.
+
+### Visualisasi Complete Binary Tree
+
+```
+Complete Binary Tree:
+         75
+        /  \
+       64   77
+      / \   / \
+     40  66 76 78
+    / \  /
+   36 50 65
+
+Properti:
+- Semua level terisi penuh kecuali level terakhir
+- Level terakhir terisi dari kiri ke kanan
+- Tinggi tree = 4
+- Jumlah node = 10
+```
+
+**Catatan Penting:**  
+- Perfect Binary Tree adalah juga Complete Binary Tree
+- Complete Binary Tree dapat diimplementasikan menggunakan array atau linked list
+
+---
+
+## Konsep Dasar Heap
+
+### Definisi Heap
+
+**Heap** adalah Complete Binary Tree dengan ketentuan tambahan mengenai hubungan nilai antara parent dan child:
+
+- **MaxHeap**: Nilai setiap node ≥ nilai child-nya  
+  `Akar(Parent) ≥ Akar(Child)`
+
+- **MinHeap**: Nilai setiap node ≤ nilai child-nya  
+  `Akar(Parent) ≤ Akar(Child)`
+
+### Property Heap
+
+1. **Shape Property**: Heap harus berbentuk Complete Binary Tree
+2. **Heap Property**: 
+   - MaxHeap: Parent ≥ Children
+   - MinHeap: Parent ≤ Children
+
+### Visualisasi MaxHeap dan MinHeap
+
+```
+MaxHeap (nilai parent ≥ nilai child):
+         12
+        /  \
+       10   7
+      / \   / \
+     6   2 4   7
+
+MinHeap (nilai parent ≤ nilai child):
+         2
+        /  \
+       4    7
+      / \   / \
+     10  8 12  7
+```
+
+---
+
+## Struktur Heap dan Definisi
+
+### Definisi Struktur Heap menggunakan Binary Tree
+
+```cpp
+typedef int infotype;
+typedef struct tNode *addrNode;
+typedef addrNode BinTree;
+
+typedef struct tNode {
+    infotype info;
+    addrNode left;
+    addrNode right;
+} Node;
+
+/* Selektor */
+#define Akar(P) (P)->info
+#define Left(P) (P)->left
+#define Right(P) (P)->right
+#define Nil NULL
+```
+
+**Penjelasan:**
+- `BinTree` adalah pointer ke root node dari heap
+- Setiap node memiliki `info` (nilai), `left` (pointer ke anak kiri), dan `right` (pointer ke anak kanan)
+- Heap direpresentasikan sebagai Complete Binary Tree
+- `Nil` merepresentasikan tree kosong atau pointer kosong
+
+---
+
+## Operasi Dasar Binary Tree untuk Heap
+
+### 1. Operasi CreateEmpty
+
+```cpp
+void CreateEmpty(BinTree *P) {
+    *P = Nil;
+}
+```
+
+Fungsi ini menginisialisasi heap kosong dengan mengatur pointer root ke Nil.
+
+### 2. Operasi AlokNode
+
+```cpp
+addrNode AlokNode(infotype X) {
+    addrNode P = (addrNode)malloc(sizeof(Node));
+    if (P != Nil) {
+        Akar(P) = X;
+        Left(P) = Nil;
+        Right(P) = Nil;
+    }
+    return P;
+}
+```
+
+Mengalokasikan memori untuk node baru dengan nilai X, dan menginisialisasi left dan right ke Nil.
+
+### 3. Operasi DealokNode
+
+```cpp
+void DealokNode(addrNode P) {
+    free(P);
+}
+```
+
+Mengembalikan memori node P ke sistem.
+
+### 4. Operasi Tree (Konstruktor)
+
+```cpp
+BinTree Tree(infotype A, BinTree L, BinTree R) {
+    BinTree T = AlokNode(A);
+    if (T != Nil) {
+        Left(T) = L;
+        Right(T) = R;
+    }
+    return T;
+}
+```
+
+Membuat binary tree node baru dengan nilai A, subpohon kiri L, dan subpohon kanan R.
+
+---
+
+## Predikat untuk Heap
+
+### 1. IsTreeEmpty
+
+```cpp
+bool IsTreeEmpty(BinTree P) {
+    return (P == Nil);
+}
+```
+
+Mengembalikan `true` jika heap kosong.
+
+### 2. IsTreeOneElmt
+
+```cpp
+bool IsTreeOneElmt(BinTree P) {
+    if (P != Nil)
+        return (Left(P) == Nil && Right(P) == Nil);
+    else
+        return false;
+}
+```
+
+Mengembalikan `true` jika heap hanya memiliki 1 elemen (hanya root tanpa anak).
+
+### 3. IsBiner
+
+```cpp
+bool IsBiner(BinTree P) {
+    if (P != Nil)
+        return (Left(P) != Nil && Right(P) != Nil);
+    else
+        return false;
+}
+```
+
+Mengembalikan `true` jika node memiliki kedua anak (kiri dan kanan).
+
+---
+
+## Helper Functions untuk Complete Binary Tree
+
+Untuk menjaga property Complete Binary Tree, kita perlu beberapa fungsi helper:
+
+### 1. Menghitung Jumlah Node
+
+```cpp
+int CountNodes(BinTree P) {
+    if (IsTreeEmpty(P)) {
+        return 0;
+    }
+    return 1 + CountNodes(Left(P)) + CountNodes(Right(P));
+}
+```
+
+### 2. Menghitung Tinggi Tree
+
+```cpp
+int Height(BinTree P) {
+    if (IsTreeEmpty(P)) {
+        return 0;
+    }
+    int leftHeight = Height(Left(P));
+    int rightHeight = Height(Right(P));
+    return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+}
+```
+
+### 3. Mencari Node dengan Level Order
+
+```cpp
+// Helper untuk menemukan node pada posisi tertentu (level order)
+addrNode FindNode(BinTree P, int position, int currentPos) {
+    if (IsTreeEmpty(P)) {
+        return Nil;
+    }
+    if (currentPos == position) {
+        return P;
+    }
+    
+    // Cari di left subtree
+    addrNode found = FindNode(Left(P), position, 2 * currentPos);
+    if (found != Nil) {
+        return found;
+    }
+    
+    // Cari di right subtree
+    return FindNode(Right(P), position, 2 * currentPos + 1);
+}
+```
+
+### 4. Mencari Parent dari Node Terakhir
+
+```cpp
+addrNode FindParentOfLast(BinTree P, int totalNodes) {
+    if (totalNodes <= 1) {
+        return Nil;
+    }
+    
+    int parentPosition = totalNodes / 2;
+    return FindNode(P, parentPosition, 1);
+}
+```
+
+---
+
+## Operasi Heapify untuk MaxHeap
+
+**Heapify** adalah proses untuk memastikan heap property terpenuhi dengan membandingkan parent dengan children dan melakukan swap jika perlu.
+
+### Heapify Down (untuk Delete)
+
+```cpp
+void HeapifyDown(BinTree *P) {
+    if (IsTreeEmpty(*P) || IsTreeOneElmt(*P)) {
+        return;
+    }
+    
+    addrNode largest = *P;
+    
+    // Bandingkan dengan left child
+    if (Left(*P) != Nil && Akar(Left(*P)) > Akar(largest)) {
+        largest = Left(*P);
+    }
+    
+    // Bandingkan dengan right child
+    if (Right(*P) != Nil && Akar(Right(*P)) > Akar(largest)) {
+        largest = Right(*P);
+    }
+    
+    // Jika largest bukan root, swap dan rekursif heapify
+    if (largest != *P) {
+        infotype temp = Akar(*P);
+        Akar(*P) = Akar(largest);
+        Akar(largest) = temp;
+        
+        // Heapify subtree yang terpengaruh
+        if (largest == Left(*P)) {
+            HeapifyDown(&Left(*P));
+        } else {
+            HeapifyDown(&Right(*P));
+        }
+    }
+}
+```
+
+**Logika HeapifyDown:**
+1. Bandingkan node dengan left dan right child
+2. Temukan yang terbesar di antara ketiganya
+3. Jika parent bukan yang terbesar, tukar dengan child terbesar
+4. Rekursif heapify pada subtree yang terpengaruh
+
+### Visualisasi HeapifyDown
+
+```
+Before HeapifyDown:
+         2
+        /  \
+       10   7
+      / \   / \
+     6   8 4   3
+
+Step 1: Compare 2 with children (10, 7)
+        Largest = 10 (left child)
+
+Step 2: Swap 2 and 10
+         10
+        /  \
+       2    7
+      / \   / \
+     6   8 4   3
+
+Step 3: HeapifyDown(left) - Compare 2 with children (6, 8)
+        Largest = 8 (right child)
+
+Step 4: Swap 2 and 8
+         10
+        /  \
+       8    7
+      / \   / \
+     6   2 4   3
+
+Result: MaxHeap property restored!
+```
+
+---
+
+## Operasi Insert untuk MaxHeap
+
+Memasukkan elemen baru ke dalam heap sambil mempertahankan Complete Binary Tree dan heap property.
+
+### Helper: Mencari Posisi Insert
+
+```cpp
+addrNode FindInsertPosition(BinTree P, int totalNodes) {
+    if (totalNodes == 0) {
+        return Nil;
+    }
+    
+    int position = (totalNodes + 1) / 2;  // Parent position for new node
+    return FindNode(P, position, 1);
+}
+```
+
+### Heapify Up (untuk Insert)
+
+```cpp
+void HeapifyUp(BinTree P, addrNode child) {
+    if (IsTreeEmpty(P) || child == P) {
+        return;
+    }
+    
+    // Cari parent dari child
+    addrNode parent = Nil;
+    if (Left(P) == child || Right(P) == child) {
+        parent = P;
+    } else {
+        if (Left(P) != Nil) {
+            HeapifyUp(Left(P), child);
+        }
+        if (Right(P) != Nil) {
+            HeapifyUp(Right(P), child);
+        }
+        return;
+    }
+    
+    // Jika child > parent, swap
+    if (parent != Nil && Akar(child) > Akar(parent)) {
+        infotype temp = Akar(parent);
+        Akar(parent) = Akar(child);
+        Akar(child) = temp;
+        
+        // Lanjutkan heapify up
+        HeapifyUp(P, parent);
+    }
+}
+```
+
+### Insert MaxHeap
+
+```cpp
+void InsertMaxHeap(BinTree *P, infotype value) {
+    if (IsTreeEmpty(*P)) {
+        // Heap kosong, buat root
+        *P = AlokNode(value);
+        return;
+    }
+    
+    int totalNodes = CountNodes(*P);
+    int newNodePos = totalNodes + 1;
+    
+    // Tentukan posisi insert berdasarkan complete binary tree property
+    // Posisi parent dari node baru
+    addrNode parent = FindInsertPosition(*P, totalNodes);
+    
+    if (parent != Nil) {
+        addrNode newNode = AlokNode(value);
+        
+        // Insert di left jika kosong, otherwise di right
+        if (Left(parent) == Nil) {
+            Left(parent) = newNode;
+        } else {
+            Right(parent) = newNode;
+        }
+        
+        // Heapify up untuk maintain heap property
+        HeapifyUp(*P, newNode);
+    }
+}
+```
+
+### Visualisasi Insert
+
+```
+Insert 9 ke MaxHeap:
+
+Initial:
+         10
+        /  \
+       7    7
+      / \   /
+     1   3 2
+
+Step 1: Insert 9 di posisi complete tree berikutnya (right child of 7)
+         10
+        /  \
+       7    7
+      / \   / \
+     1   3 2   9
+
+Step 2: Heapify Up - Compare 9 with parent 7
+        9 > 7, maka SWAP!
+         10
+        /  \
+       7    9
+      / \   / \
+     1   3 2   7
+
+Step 3: Heapify Up - Compare 9 with parent 10
+        9 < 10, STOP!
+
+Result: MaxHeap maintained!
+```
+
+---
+
+## Operasi Delete untuk MaxHeap
+
+Menghapus root (elemen maksimum) dari heap.
+
+### Helper: Mencari Node Terakhir
+
+```cpp
+addrNode FindLastNode(BinTree P, int totalNodes) {
+    if (totalNodes <= 0) {
+        return Nil;
+    }
+    return FindNode(P, totalNodes, 1);
+}
+```
+
+### Delete MaxHeap
+
+```cpp
+infotype DeleteMaxHeap(BinTree *P) {
+    if (IsTreeEmpty(*P)) {
+        cout << "Heap kosong!" << endl;
+        return -1;
+    }
+    
+    infotype rootValue = Akar(*P);
+    
+    if (IsTreeOneElmt(*P)) {
+        // Hanya ada root
+        DealokNode(*P);
+        *P = Nil;
+        return rootValue;
+    }
+    
+    // Cari node terakhir
+    int totalNodes = CountNodes(*P);
+    addrNode lastNode = FindLastNode(*P, totalNodes);
+    addrNode parentOfLast = FindParentOfLast(*P, totalNodes);
+    
+    // Pindahkan nilai last node ke root
+    Akar(*P) = Akar(lastNode);
+    
+    // Hapus last node
+    if (parentOfLast != Nil) {
+        if (Right(parentOfLast) == lastNode) {
+            Right(parentOfLast) = Nil;
+        } else {
+            Left(parentOfLast) = Nil;
+        }
+        DealokNode(lastNode);
+    }
+    
+    // Heapify down dari root
+    HeapifyDown(P);
+    
+    return rootValue;
+}
+```
+
+### Visualisasi Delete
+
+```
+Delete Root dari MaxHeap:
+
+Initial:
+         12
+        /  \
+       7    10
+      / \   /
+     1   3 4
+
+Step 1: Simpan root (12), pindahkan last node (4) ke root
+         4
+        /  \
+       7    10
+      / \
+     1   3
+
+Step 2: HeapifyDown - Compare 4 with children (7, 10)
+        Largest = 10, SWAP!
+         10
+        /  \
+       7    4
+      / \
+     1   3
+
+Step 3: HeapifyDown - 4 adalah leaf, STOP!
+
+Result: MaxHeap maintained!
+Return: 12
+```
+
+---
+
+## Operasi untuk MinHeap
+
+MinHeap memiliki operasi yang sama dengan MaxHeap, tetapi dengan logika perbandingan terbalik.
+
+### Heapify Down untuk MinHeap
+
+```cpp
+void HeapifyDownMin(BinTree *P) {
+    if (IsTreeEmpty(*P) || IsTreeOneElmt(*P)) {
+        return;
+    }
+    
+    addrNode smallest = *P;
+    
+    // Bandingkan dengan left child
+    if (Left(*P) != Nil && Akar(Left(*P)) < Akar(smallest)) {
+        smallest = Left(*P);
+    }
+    
+    // Bandingkan dengan right child
+    if (Right(*P) != Nil && Akar(Right(*P)) < Akar(smallest)) {
+        smallest = Right(*P);
+    }
+    
+    // Jika smallest bukan root, swap dan rekursif heapify
+    if (smallest != *P) {
+        infotype temp = Akar(*P);
+        Akar(*P) = Akar(smallest);
+        Akar(smallest) = temp;
+        
+        if (smallest == Left(*P)) {
+            HeapifyDownMin(&Left(*P));
+        } else {
+            HeapifyDownMin(&Right(*P));
+        }
+    }
+}
+```
+
+### Heapify Up untuk MinHeap
+
+```cpp
+void HeapifyUpMin(BinTree P, addrNode child) {
+    if (IsTreeEmpty(P) || child == P) {
+        return;
+    }
+    
+    addrNode parent = Nil;
+    if (Left(P) == child || Right(P) == child) {
+        parent = P;
+    } else {
+        if (Left(P) != Nil) {
+            HeapifyUpMin(Left(P), child);
+        }
+        if (Right(P) != Nil) {
+            HeapifyUpMin(Right(P), child);
+        }
+        return;
+    }
+    
+    // Jika child < parent, swap (berbeda dari MaxHeap)
+    if (parent != Nil && Akar(child) < Akar(parent)) {
+        infotype temp = Akar(parent);
+        Akar(parent) = Akar(child);
+        Akar(child) = temp;
+        
+        HeapifyUpMin(P, parent);
+    }
+}
+```
+
+---
+
+## Fungsi Utilitas Heap
+
+### 1. Print Level Order
+
+```cpp
+void PrintLevelOrder(BinTree P) {
+    if (IsTreeEmpty(P)) {
+        cout << "Heap kosong!" << endl;
+        return;
+    }
+    
+    // Menggunakan queue sederhana dengan array
+    addrNode queue[100];
+    int front = 0, rear = 0;
+    
+    queue[rear++] = P;
+    
+    while (front < rear) {
+        addrNode current = queue[front++];
+        cout << Akar(current) << " ";
+        
+        if (Left(current) != Nil) {
+            queue[rear++] = Left(current);
+        }
+        if (Right(current) != Nil) {
+            queue[rear++] = Right(current);
+        }
+    }
+    cout << endl;
+}
+```
+
+### 2. Cek MaxHeap Property
+
+```cpp
+bool IsMaxHeap(BinTree P) {
+    if (IsTreeEmpty(P) || IsTreeOneElmt(P)) {
+        return true;
+    }
+    
+    // Cek left child
+    if (Left(P) != Nil) {
+        if (Akar(P) < Akar(Left(P))) {
+            return false;
+        }
+        if (!IsMaxHeap(Left(P))) {
+            return false;
+        }
+    }
+    
+    // Cek right child
+    if (Right(P) != Nil) {
+        if (Akar(P) < Akar(Right(P))) {
+            return false;
+        }
+        if (!IsMaxHeap(Right(P))) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+```
+
+### 3. Get Maximum (Root)
+
+```cpp
+infotype GetMax(BinTree P) {
+    if (IsTreeEmpty(P)) {
+        cout << "Heap kosong!" << endl;
+        return -1;
+    }
+    return Akar(P);
+}
+```
+
+---
+
+## Contoh Program Lengkap
+
+```cpp
+#include <iostream>
+#include <cstdlib>
+using namespace std;
+
+typedef int infotype;
+typedef struct tNode *addrNode;
+typedef addrNode BinTree;
+
+typedef struct tNode {
+    infotype info;
+    addrNode left;
+    addrNode right;
+} Node;
+
+#define Akar(P) (P)->info
+#define Left(P) (P)->left
+#define Right(P) (P)->right
+#define Nil NULL
+
+// Operasi Dasar
+void CreateEmpty(BinTree *P) {
+    *P = Nil;
+}
+
+addrNode AlokNode(infotype X) {
+    addrNode P = (addrNode)malloc(sizeof(Node));
+    if (P != Nil) {
+        Akar(P) = X;
+        Left(P) = Nil;
+        Right(P) = Nil;
+    }
+    return P;
+}
+
+void DealokNode(addrNode P) {
+    free(P);
+}
+
+BinTree Tree(infotype A, BinTree L, BinTree R) {
+    BinTree T = AlokNode(A);
+    if (T != Nil) {
+        Left(T) = L;
+        Right(T) = R;
+    }
+    return T;
+}
+
+// Predikat
+bool IsTreeEmpty(BinTree P) {
+    return (P == Nil);
+}
+
+bool IsTreeOneElmt(BinTree P) {
+    if (P != Nil)
+        return (Left(P) == Nil && Right(P) == Nil);
+    else
+        return false;
+}
+
+// Helper Functions
+int CountNodes(BinTree P) {
+    if (IsTreeEmpty(P)) return 0;
+    return 1 + CountNodes(Left(P)) + CountNodes(Right(P));
+}
+
+void HeapifyDown(BinTree *P) {
+    if (IsTreeEmpty(*P) || IsTreeOneElmt(*P)) return;
+    
+    addrNode largest = *P;
+    
+    if (Left(*P) != Nil && Akar(Left(*P)) > Akar(largest)) {
+        largest = Left(*P);
+    }
+    
+    if (Right(*P) != Nil && Akar(Right(*P)) > Akar(largest)) {
+        largest = Right(*P);
+    }
+    
+    if (largest != *P) {
+        infotype temp = Akar(*P);
+        Akar(*P) = Akar(largest);
+        Akar(largest) = temp;
+        
+        if (largest == Left(*P)) {
+            HeapifyDown(&Left(*P));
+        } else {
+            HeapifyDown(&Right(*P));
+        }
+    }
+}
+
+void PrintLevelOrder(BinTree P) {
+    if (IsTreeEmpty(P)) {
+        cout << "Heap kosong!" << endl;
+        return;
+    }
+    
+    addrNode queue[100];
+    int front = 0, rear = 0;
+    queue[rear++] = P;
+    
+    cout << "Heap (Level Order): ";
+    while (front < rear) {
+        addrNode current = queue[front++];
+        cout << Akar(current) << " ";
+        
+        if (Left(current) != Nil) {
+            queue[rear++] = Left(current);
+        }
+        if (Right(current) != Nil) {
+            queue[rear++] = Right(current);
+        }
+    }
+    cout << endl;
+}
+
+int main() {
+    // Membuat MaxHeap secara manual:
+    //       12
+    //      /  \
+    //     10   7
+    //    / \   /
+    //   6   2 4
+    
+    BinTree leaf6 = Tree(6, Nil, Nil);
+    BinTree leaf2 = Tree(2, Nil, Nil);
+    BinTree leaf4 = Tree(4, Nil, Nil);
+    BinTree node10 = Tree(10, leaf6, leaf2);
+    BinTree node7 = Tree(7, leaf4, Nil);
+    BinTree root = Tree(12, node10, node7);
+    
+    cout << "=== MaxHeap ===" << endl;
+    PrintLevelOrder(root);
+    cout << "Jumlah node: " << CountNodes(root) << endl;
+    cout << "Root (Max): " << Akar(root) << endl;
+    
+    // Simulasi HeapifyDown dengan mengubah root
+    cout << "\n=== Setelah mengubah root menjadi 5 ===" << endl;
+    Akar(root) = 5;
+    cout << "Sebelum HeapifyDown: ";
+    PrintLevelOrder(root);
+    
+    HeapifyDown(&root);
+    cout << "Setelah HeapifyDown: ";
+    PrintLevelOrder(root);
+    cout << "Root baru (Max): " << Akar(root) << endl;
+    
+    return 0;
+}
+```
+
+**Output Program:**
+```
+=== MaxHeap ===
+Heap (Level Order): 12 10 7 6 2 4 
+Jumlah node: 6
+Root (Max): 12
+
+=== Setelah mengubah root menjadi 5 ===
+Sebelum HeapifyDown: 5 10 7 6 2 4 
+Setelah HeapifyDown: 10 6 7 5 2 4 
+Root baru (Max): 10
+```
+
+---
+
+
+## Latihan Soal
+
+### Latihan 1: Heap Height Calculator
+**Objektif**: Menghitung tinggi heap dan verifikasi complete binary tree property.
+
+**Spesifikasi:**
+- Input: MaxHeap
+- Proses: Hitung tinggi dan cek apakah benar-benar complete binary tree
+- Output: Tinggi heap dan status complete
+
+{/*
+```cpp
+int HeapHeight(BinTree P) {
+    if (IsTreeEmpty(P)) return 0;
+    
+    int leftHeight = HeapHeight(Left(P));
+    int rightHeight = HeapHeight(Right(P));
+    
+    return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+}
+```
+*/}
+
+{/*
+```cpp
+int HeapHeight(BinTree P) {
+    if (IsTreeEmpty(P)) 
+        return 0;
+
+    int leftHeight = HeapHeight(Left(P));
+    int rightHeight = HeapHeight(Right(P));
+
+    int maxHeight;
+    if (leftHeight > rightHeight) {
+        maxHeight = leftHeight;
+    } else {
+        maxHeight = rightHeight;
+    }
+
+    return 1 + maxHeight;
+}
+```
+*/}
+
+---
+
+### Latihan 2: Convert MinHeap to MaxHeap
+**Objektif**: Mengubah MinHeap menjadi MaxHeap.
+
+**Spesifikasi:**
+- Input: MinHeap
+- Proses: Ubah semua nilai sehingga membentuk MaxHeap property
+- Output: MaxHeap
+
+**Hint:** Gunakan pendekatan post-order traversal dan heapify di setiap node.
+
+---
+
+*Materi - Heap*
+
+---
