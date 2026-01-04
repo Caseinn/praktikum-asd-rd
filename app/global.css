@@ -1,0 +1,102 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/vitepress.css';
+@import 'fumadocs-ui/css/preset.css';
+@import "tw-animate-css";
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.7s ease both;
+}
+
+.stagger-1 {
+  animation-delay: 0.08s;
+}
+
+.stagger-2 {
+  animation-delay: 0.16s;
+}
+
+.stagger-3 {
+  animation-delay: 0.24s;
+}
+
+.stagger-4 {
+  animation-delay: 0.32s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in {
+    animation: none;
+  }
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-fd-border) 65%, transparent);
+  background: color-mix(in oklab, var(--color-fd-muted) 65%, transparent);
+  color: var(--color-fd-foreground);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+}
+
+.status-chip[data-tone="active"] {
+  border-color: color-mix(in oklab, var(--color-fd-success) 55%, transparent);
+  background: color-mix(in oklab, var(--color-fd-success) 18%, transparent);
+  color: var(--color-fd-success);
+}
+
+.status-chip[data-tone="expired"] {
+  border-color: color-mix(in oklab, var(--color-fd-error) 55%, transparent);
+  background: color-mix(in oklab, var(--color-fd-error) 16%, transparent);
+  color: var(--color-fd-error);
+}
+
+.status-chip[data-tone="upcoming"] {
+  border-color: color-mix(in oklab, var(--color-fd-accent) 55%, transparent);
+  background: color-mix(in oklab, var(--color-fd-accent) 18%, transparent);
+  color: var(--color-fd-foreground);
+}
+
+.status-chip[data-tone="notice"] {
+  border-color: color-mix(in oklab, var(--color-fd-warning) 55%, transparent);
+  background: color-mix(in oklab, var(--color-fd-warning) 18%, transparent);
+  color: var(--color-fd-warning);
+}
+
+a,
+button:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
