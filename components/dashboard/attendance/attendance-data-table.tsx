@@ -404,7 +404,7 @@ export default function AttendanceDataTable({
               <TableCell colSpan={columns.length} className="py-6 text-center text-sm">
                 {hasFilter
                   ? "Tidak ada hasil pencarian yang sesuai."
-                  : "Belum ada data roster aktif."}
+                  : "Belum ada data Mahasiswa aktif."}
               </TableCell>
             </TableRow>
           )}

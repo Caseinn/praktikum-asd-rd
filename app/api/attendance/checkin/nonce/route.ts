@@ -44,7 +44,7 @@ export async function GET(req: Request) {
     select: { isActive: true },
   });
   if (!roster?.isActive) {
-    return NextResponse.json({ error: "Roster tidak aktif." }, { status: 403 });
+    return NextResponse.json({ error: "Mahasiswa tidak aktif." }, { status: 403 });
   }
 
   const attendanceSession = await prisma.attendanceSession.findUnique({

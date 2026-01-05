@@ -207,7 +207,7 @@ export default async function AttendanceSessionDetail({
 
               {extraRecords.length > 0 && (
                 <p className="text-xs text-fd-muted-foreground">
-                  {extraRecords.length} presensi tanpa NIM roster.
+                  {extraRecords.length} presensi tanpa NIM Mahasiswa.
                 </p>
               )}
             </div>
