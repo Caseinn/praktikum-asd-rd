@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
-import { CSRF_COOKIE_NAME } from "@/lib/csrf";
+import { CSRF_COOKIE_NAME, CSRF_TTL_SECONDS } from "@/lib/csrf";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -10,14 +10,13 @@ export async function GET() {
 
   const res = NextResponse.json({ token });
   res.headers.set("Cache-Control", "no-store");
-  if (!existing) {
-    res.cookies.set(CSRF_COOKIE_NAME, token, {
-      httpOnly: false,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
-  }
+  res.cookies.set(CSRF_COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: CSRF_TTL_SECONDS,
+  });
 
   return res;
 }
