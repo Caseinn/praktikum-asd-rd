@@ -1,8 +1,8 @@
 import '@/app/global.css';
 import type { Metadata } from "next";
-import { RootProvider } from 'fumadocs-ui/provider';
+import { headers } from "next/headers";
 import { Space_Grotesk } from 'next/font/google';
-import { Toaster } from '@/components/ui/sonner';
+import ThemeProviderClient from "@/components/shared/theme-provider";
 import { getSiteUrl } from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
@@ -37,14 +37,14 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
 });
 
-export default function Layout({ children }: LayoutProps<'/'>) {
+export default async function Layout({ children }: LayoutProps<'/'>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="id" className={spaceGrotesk.className} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col bg-fd-background text-fd-foreground antialiased">
-        <RootProvider>
+        <ThemeProviderClient nonce={nonce}>
           {children}
-          <Toaster />
-        </RootProvider>
+        </ThemeProviderClient>
       </body>
     </html>
   );

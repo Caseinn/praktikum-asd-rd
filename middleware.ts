@@ -43,15 +43,22 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
 }
 
 export function middleware(req: NextRequest) {
-  const res = NextResponse.next();
   const pathname = req.nextUrl.pathname;
 
   if (!pathname.startsWith("/api")) {
     const nonce = crypto.randomUUID();
-    res.headers.set("Content-Security-Policy", buildCsp(nonce));
+    const csp = buildCsp(nonce);
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("content-security-policy", csp);
+    const res = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    res.headers.set("Content-Security-Policy", csp);
     res.headers.set("x-nonce", nonce);
     return res;
   }
+
+  const res = NextResponse.next();
 
   if (pathname !== "/api/csrf") {
     applyCorsHeaders(req, res);
