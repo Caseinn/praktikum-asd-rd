@@ -31,6 +31,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
 
+      const role = (user as { role?: "ADMIN" | "STUDENT" }).role ?? "STUDENT";
+      if (role === "ADMIN") {
+        return true;
+      }
+
       // Extract NIM from email
       const nim = extractNimFromEmail(user.email);
 
