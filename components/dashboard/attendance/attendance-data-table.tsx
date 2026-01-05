@@ -79,11 +79,12 @@ export default function AttendanceDataTable({
         return;
       }
 
+      const toastId = toast.loading("Memperbarui presensi...");
       setBusyStatus(status);
       try {
         const csrfToken = await ensureCsrfToken();
         if (!csrfToken) {
-          toast.error("Gagal mendapatkan token keamanan.");
+          toast.error("Gagal mendapatkan token keamanan.", { id: toastId });
           return;
         }
 
@@ -102,7 +103,7 @@ export default function AttendanceDataTable({
 
         const payload = await res.json();
         if (!res.ok) {
-          toast.error(payload.error ?? "Gagal memperbarui presensi.");
+          toast.error(payload.error ?? "Gagal memperbarui presensi.", { id: toastId });
           return;
         }
 
@@ -126,16 +127,16 @@ export default function AttendanceDataTable({
           ? payload.updated
           : appliedNims.length;
         if (updatedCount > 0) {
-          toast.success(`Presensi diperbarui untuk ${updatedCount} mahasiswa.`);
+          toast.success(`Presensi diperbarui untuk ${updatedCount} mahasiswa.`, { id: toastId });
         } else {
-          toast.info("Tidak ada presensi yang diperbarui.");
+          toast.info("Tidak ada presensi yang diperbarui.", { id: toastId });
         }
         if (missingNims.length > 0) {
           toast.info(`NIM tidak ditemukan: ${missingNims.join(", ")}.`);
         }
         router.refresh();
       } catch {
-        toast.error("Terjadi kesalahan saat memperbarui presensi.");
+        toast.error("Terjadi kesalahan saat memperbarui presensi.", { id: toastId });
       } finally {
         setBusyStatus(null);
       }

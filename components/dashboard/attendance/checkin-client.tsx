@@ -47,6 +47,7 @@ export default function CheckinClient({
       return;
     }
 
+    const toastId = toast.loading("Memproses presensi...");
     setMsg("Mengambil lokasi...");
     try {
       const loc = await getCurrentLocation();
@@ -58,14 +59,14 @@ export default function CheckinClient({
       const nonceData = await nonceRes.json();
       if (!nonceRes.ok || !nonceData?.nonce) {
         setMsg("");
-        toast.error(nonceData?.error ?? "Gagal menyiapkan presensi.");
+        toast.error(nonceData?.error ?? "Gagal menyiapkan presensi.", { id: toastId });
         return;
       }
 
       const csrfToken = await ensureCsrfToken();
       if (!csrfToken) {
         setMsg("");
-        toast.error("Gagal mendapatkan token keamanan.");
+        toast.error("Gagal mendapatkan token keamanan.", { id: toastId });
         return;
       }
       const res = await fetch("/api/attendance/checkin", {
@@ -80,20 +81,20 @@ export default function CheckinClient({
       const data = await res.json();
       if (!res.ok) {
         setMsg("");
-        toast.error(data.error ?? "Gagal presensi");
+        toast.error(data.error ?? "Gagal presensi", { id: toastId });
         return;
       }
 
       setMsg("");
       const distanceNote =
         typeof data.distance === "number" ? ` Jarak: ${data.distance}m` : "";
-      toast.success(`Presensi berhasil.${distanceNote}`);
+      toast.success(`Presensi berhasil.${distanceNote}`, { id: toastId });
       setCheckedIn(true);
       router.refresh();
     } catch (err: unknown) {
       setMsg("");
       const message = err instanceof Error ? err.message : "Gagal mengambil lokasi";
-      toast.error(message);
+      toast.error(message, { id: toastId });
     }
   };
 

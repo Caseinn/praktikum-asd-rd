@@ -1,4 +1,5 @@
 import ToasterProvider from "@/components/shared/toaster-provider";
+import DashboardToast from "@/components/shared/dashboard-toast";
 
 export default function DashboardLayout({
   children,
@@ -8,6 +9,7 @@ export default function DashboardLayout({
   return (
     <>
       <ToasterProvider />
+      <DashboardToast />
       {children}
     </>
   );

@@ -82,15 +82,6 @@ export default function LoginClient({ error }: LoginClientProps) {
                 </p>
               </div>
 
-              {errorMessage && (
-                <div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-fd-foreground">
-                  <div className="font-semibold">Gagal login</div>
-                  <div className="mt-0.5 text-xs text-fd-muted-foreground">
-                    {errorMessage}
-                  </div>
-                </div>
-              )}
-
               <button
                 onClick={handleGoogleLogin}
                 disabled={loading}

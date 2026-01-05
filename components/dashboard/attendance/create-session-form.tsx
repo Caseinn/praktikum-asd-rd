@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { MapPin, Clock, CalendarPlus, Info } from "lucide-react";
 import { toast } from "sonner";
 import { formatWIBInputValue } from "@/lib/time";
 import { ensureCsrfToken } from "@/lib/csrf-client";
 import { CSRF_HEADER_NAME } from "@/lib/csrf";
+import { SESSION_CREATED_TOAST_KEY } from "@/lib/toast-keys";
 
 type FormState = {
   title: string;
@@ -22,6 +24,7 @@ function defaultWIBDateTime(hoursFromNow = 0): string {
 }
 
 export default function CreateSessionForm() {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>({
     title: "",
     startTime: defaultWIBDateTime(0),
@@ -86,10 +89,11 @@ export default function CreateSessionForm() {
     }
 
     setBusy(true);
+    const toastId = toast.loading("Menyimpan sesi presensi...");
     try {
       const csrfToken = await ensureCsrfToken();
       if (!csrfToken) {
-        toast.error("Gagal mendapatkan token keamanan.");
+        toast.error("Gagal mendapatkan token keamanan.", { id: toastId });
         return;
       }
       const res = await fetch("/api/attendance/sessions", {
@@ -109,11 +113,14 @@ export default function CreateSessionForm() {
 
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? "Gagal membuat sesi.");
+        toast.error(data.error ?? "Gagal membuat sesi.", { id: toastId });
         return;
       }
 
-      toast.success("Sesi presensi berhasil dibuat!");
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(SESSION_CREATED_TOAST_KEY, "Sesi presensi berhasil dibuat!");
+      }
+      toast.dismiss(toastId);
       setForm((prev) => ({
         ...prev,
         title: "",
@@ -121,8 +128,9 @@ export default function CreateSessionForm() {
         latitude: "",
         longitude: "",
       }));
+      router.push("/dashboard/admin/attendance");
     } catch {
-      toast.error("Terjadi kesalahan. Coba lagi.");
+      toast.error("Terjadi kesalahan. Coba lagi.", { id: toastId });
     } finally {
       setBusy(false);
     }
