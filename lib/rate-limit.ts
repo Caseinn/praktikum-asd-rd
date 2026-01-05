@@ -12,6 +12,8 @@ type RateLimitEntry = {
 
 const store = new Map<string, RateLimitEntry>();
 
+const requireRedis = process.env.NODE_ENV === "production" && !redis;
+
 export function getRateLimitKey(
   req: Request,
   scope: string,
@@ -40,6 +42,10 @@ export async function checkRateLimit(
       return { ok: false, retryAfter: ttl && ttl > 0 ? ttl : windowSeconds };
     }
     return { ok: true, retryAfter: 0 };
+  }
+
+  if (requireRedis) {
+    return { ok: false, retryAfter: windowSeconds };
   }
 
   const now = Date.now();

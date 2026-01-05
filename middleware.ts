@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
+import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, CSRF_TTL_SECONDS } from "@/lib/csrf";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -88,10 +88,11 @@ export function middleware(req: NextRequest) {
   if (!csrfCookie) {
     const token = crypto.randomUUID();
     res.cookies.set(CSRF_COOKIE_NAME, token, {
-      httpOnly: false,
-      sameSite: "lax",
+      httpOnly: true,
+      sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
       path: "/",
+      maxAge: CSRF_TTL_SECONDS,
     });
   }
 
