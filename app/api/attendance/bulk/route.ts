@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { AttendanceStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 const ALLOWED_STATUSES: AttendanceStatus[] = ["HADIR", "IZIN", "TIDAK_HADIR"];
+
+const MAX_BODY_BYTES = 100_000;
+const MAX_NIMS = 200;
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -24,11 +28,28 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = await req.json();
-  const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
-  const rawStatus = typeof body?.status === "string" ? body.status.trim().toUpperCase() : "";
+  const rawBody = await req.text();
+  if (rawBody.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Payload terlalu besar." }, { status: 413 });
+  }
+
+  let body: unknown = {};
+  try {
+    body = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
+  }
+
+  const { sessionId: rawSessionId, status: rawStatusValue, nims: rawNimsValue } = body as Record<string, unknown>;
+
+  const sessionId = typeof rawSessionId === "string" ? rawSessionId.trim() : "";
+  const rawStatus = typeof rawStatusValue === "string" ? rawStatusValue.trim().toUpperCase() : "";
   const status = rawStatus as AttendanceStatus;
-  const rawNims = Array.isArray(body?.nims) ? body.nims : [];
+  const rawNims = Array.isArray(rawNimsValue) ? rawNimsValue : [];
   const nims = rawNims
     .filter((nim: unknown): nim is string => typeof nim === "string")
     .map((nim: string) => nim.trim())
@@ -40,6 +61,9 @@ export async function POST(req: Request) {
       { error: "Session ID dan daftar NIM wajib diisi." },
       { status: 400 }
     );
+  }
+  if (uniqueNims.length > MAX_NIMS) {
+    return NextResponse.json({ error: "Jumlah NIM terlalu banyak." }, { status: 413 });
   }
   if (!ALLOWED_STATUSES.includes(status)) {
     return NextResponse.json({ error: "Status tidak valid." }, { status: 400 });
@@ -82,8 +106,12 @@ export async function POST(req: Request) {
     );
   }
 
+  const adminHash = session.user.email
+    ? createHash("sha256").update(session.user.email).digest("hex")
+    : null;
+
   console.info("[audit] attendance.bulk", {
-    adminEmail: session.user.email,
+    adminHash,
     sessionId,
     status,
     updated: users.length,

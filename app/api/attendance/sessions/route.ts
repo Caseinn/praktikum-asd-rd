@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { parseWIBDateTime } from "@/lib/time";
 import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
+const MAX_BODY_BYTES = 20_000;
+
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Tidak terautentikasi." }, { status: 401 });
@@ -43,8 +45,27 @@ export async function POST(req: Request) {
     );
   }
 
-  const body = await req.json();
-  const { title, startTime, latitude, longitude, radius } = body;
+  const rawBody = await req.text();
+  if (rawBody.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Payload terlalu besar." }, { status: 413 });
+  }
+
+  let body: unknown = {};
+  try {
+    body = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Payload tidak valid." }, { status: 400 });
+  }
+
+  const { title, startTime, latitude, longitude, radius } = body as Record<string, unknown>;
+
+  if (typeof title !== "string" || typeof startTime !== "string") {
+    return NextResponse.json({ error: "Judul dan waktu mulai wajib diisi." }, { status: 400 });
+  }
 
   if (!title || !startTime) {
     return NextResponse.json({ error: "Judul dan waktu mulai wajib diisi." }, { status: 400 });
@@ -83,7 +104,7 @@ export async function POST(req: Request) {
   });
 
   console.info("[audit] attendance.session.create", {
-    adminEmail: session.user.email,
+    adminId: admin.id,
     sessionId: created.id,
     title: created.title,
   });

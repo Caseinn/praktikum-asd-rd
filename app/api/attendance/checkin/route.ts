@@ -37,6 +37,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "NIM tidak terdeteksi dari email." }, { status: 400 });
   }
 
+  const roster = await prisma.studentRoster.findUnique({
+    where: { nim: user.nim },
+    select: { isActive: true },
+  });
+  if (!roster?.isActive) {
+    return NextResponse.json({ error: "Roster tidak aktif." }, { status: 403 });
+  }
+
   const attendanceSession = await prisma.attendanceSession.findUnique({
     where: { id: sessionId },
   });

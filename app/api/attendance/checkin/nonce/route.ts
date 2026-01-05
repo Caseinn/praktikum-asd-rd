@@ -30,10 +30,21 @@ export async function GET(req: Request) {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true },
+    select: { id: true, nim: true },
   });
   if (!user) {
     return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
+  }
+  if (!user.nim) {
+    return NextResponse.json({ error: "NIM tidak terdeteksi dari email." }, { status: 400 });
+  }
+
+  const roster = await prisma.studentRoster.findUnique({
+    where: { nim: user.nim },
+    select: { isActive: true },
+  });
+  if (!roster?.isActive) {
+    return NextResponse.json({ error: "Roster tidak aktif." }, { status: 403 });
   }
 
   const attendanceSession = await prisma.attendanceSession.findUnique({
