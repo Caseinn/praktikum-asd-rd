@@ -7,8 +7,8 @@ export default function DashboardLayout({
 }) {
   return (
     <>
-      {children}
       <ToasterProvider />
+      {children}
     </>
   );
 }
